@@ -4,7 +4,10 @@ name: Deploy Dash0 OTel Demo
 description: deploy a release of the Dash0 fork of the OpenTelemetry demo
 inputs:
   containerImageVersion:
-    description: 'version tag of the Dash0 OTel Demo container images, e.g. 1.1.0'
+    description: "version tag of the Dash0 OTel Demo container images, e.g. 1.1.0"
+    required: true
+  token:
+    description: "token granting read/write access to dash0-configuration repository."
     required: true
 
 runs:
