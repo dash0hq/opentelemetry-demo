@@ -4,7 +4,7 @@ name: Deploy Dash0 OTel Demo
 description: deploy a release of the Dash0 fork of the OpenTelemetry demo
 inputs:
   containerImageVersion:
-    description: 'version tag of the Dash0 OTel Demo container images, e.g. 1.1.0'
+    description: "version tag of the Dash0 OTel Demo container images, e.g. 1.1.0"
     required: true
 
 runs:
@@ -36,12 +36,12 @@ runs:
       run: gh pr review --approve "${{ steps.cpr.outputs.pull-request-number }}"
       shell: bash
       env:
-        GH_TOKEN: ${{ inputs.token }}
+        GH_TOKEN: ${{ github.token }}
 
     - name: enable pull request auto merge
       if: steps.cpr.outputs.pull-request-operation == 'created'
       uses: peter-evans/enable-pull-request-automerge@v3
       with:
-        token: ${{ inputs.token }}
+        token: ${{ github.token }}
         pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
         merge-method: squash
