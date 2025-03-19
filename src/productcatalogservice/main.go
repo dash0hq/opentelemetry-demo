@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
+	"github.com/uptrace/opentelemetry-go-extra/otellogrus"
 
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
@@ -53,6 +54,16 @@ var (
 
 func init() {
 	log = logrus.New()
+	
+	// Add OpenTelemetry hook to send logs to the collector
+	log.AddHook(otellogrus.NewHook(otellogrus.WithLevels(
+		logrus.PanicLevel,
+		logrus.FatalLevel,
+		logrus.ErrorLevel,
+		logrus.WarnLevel,
+		logrus.InfoLevel,
+	)))
+	
 	var err error
 	catalog, err = readProductFiles()
 	if err != nil {
@@ -126,6 +137,9 @@ func main() {
 		}
 		log.Println("Shutdown meter provider")
 	}()
+	
+	// Configure the logrus hook to use the current tracer
+	otellogrus.SetTraceProvider(tp)
 
 	err := runtime.Start(runtime.WithMinimumReadMemStatsInterval(time.Second))
 	if err != nil {
