@@ -140,8 +140,6 @@ func main() {
 		}
 		log.Println("Shutdown meter provider")
 	}()
-	
-	// The otellogrus hook will automatically use the global logger provider
 
 	err := runtime.Start(runtime.WithMinimumReadMemStatsInterval(time.Second))
 	if err != nil {
