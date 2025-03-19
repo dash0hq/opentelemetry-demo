@@ -54,7 +54,7 @@ var (
 
 func init() {
 	log = logrus.New()
-	
+
 	// Add OpenTelemetry hook to send logs to the collector
 	log.AddHook(otellogrus.NewHook(otellogrus.WithLevels(
 		logrus.PanicLevel,
@@ -63,7 +63,7 @@ func init() {
 		logrus.WarnLevel,
 		logrus.InfoLevel,
 	)))
-	
+
 	var err error
 	catalog, err = readProductFiles()
 	if err != nil {
@@ -94,7 +94,7 @@ func initTracerProvider() *sdktrace.TracerProvider {
 
 	exporter, err := otlptracegrpc.New(ctx)
 	if err != nil {
-		log.Fatalf("OTLP Trace gRPC Creation: %v", err)
+		log.WithContext(ctx).Fatalf("OTLP Trace gRPC Creation: %v", err)
 	}
 	tp := sdktrace.NewTracerProvider(
 		sdktrace.WithBatcher(exporter),
@@ -110,7 +110,7 @@ func initMeterProvider() *sdkmetric.MeterProvider {
 
 	exporter, err := otlpmetricgrpc.New(ctx)
 	if err != nil {
-		log.Fatalf("new otlp metric grpc exporter failed: %v", err)
+		log.WithContext(ctx).Fatalf("new otlp metric grpc exporter failed: %v", err)
 	}
 
 	mp := sdkmetric.NewMeterProvider(
@@ -137,9 +137,6 @@ func main() {
 		}
 		log.Println("Shutdown meter provider")
 	}()
-	
-	// Configure the logrus hook to use the current tracer
-	otellogrus.SetTraceProvider(tp)
 
 	err := runtime.Start(runtime.WithMinimumReadMemStatsInterval(time.Second))
 	if err != nil {
@@ -172,14 +169,14 @@ func main() {
 
 	go func() {
 		if err := srv.Serve(ln); err != nil {
-			log.Fatalf("Failed to serve gRPC server, err: %v", err)
+			log.WithContext(ctx).Fatalf("Failed to serve gRPC server, err: %v", err)
 		}
 	}()
 
 	<-ctx.Done()
 
 	srv.GracefulStop()
-	log.Println("ProductCatalogService gRPC server stopped")
+	log.WithContext(ctx).Println("ProductCatalogService gRPC server stopped")
 }
 
 type productCatalog struct {
