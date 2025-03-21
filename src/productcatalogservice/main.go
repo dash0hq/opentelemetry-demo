@@ -290,6 +290,7 @@ func (p *productCatalog) GetProduct(ctx context.Context, req *pb.GetProductReque
 		msg := fmt.Sprintf("Product Id Lookup Failed: %s", req.Id)
 		err := fmt.Errorf("ProductCatalogService Fail Feature Flag Enabled")
 		span.SetStatus(otelcodes.Error, msg)
+		span.AddEvent(msg)
 		log.WithContext(ctx).WithError(err).Errorln(msg)
 		return nil, status.Errorf(codes.Internal, msg)
 	}
