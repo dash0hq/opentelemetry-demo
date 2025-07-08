@@ -41,11 +41,6 @@ if (typeof window !== 'undefined') {
     pageViewInstrumentation: {
       includeParts: ['SEARCH', 'HASH'],
     },
-
-    additionalSignalAttributes: {
-      'user_agent.original': randomUser.userAgent,
-    },
-
     serviceName: window.ENV.NEXT_PUBLIC_OTEL_SERVICE_NAME!,
     endpoint: {
       url: window.ENV.NEXT_PUBLIC_DASH0_WEB_SDK_URL,
