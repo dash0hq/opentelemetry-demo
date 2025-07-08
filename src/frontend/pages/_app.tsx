@@ -10,7 +10,7 @@ import CartProvider from '../providers/Cart.provider';
 import { ThemeProvider } from 'styled-components';
 import Theme from '../styles/Theme';
 import FrontendTracer from '../utils/telemetry/FrontendTracer';
-import { init, identify, addSignalAttribute } from '@dash0/sdk-web';
+import { init, identify, addSignalAttribute, removeSignalAttribute } from '@dash0/sdk-web';
 import { createRandomUser } from '../utils/faker/createRandomUser';
 import { createRandomLocation } from '../utils/faker/createRandomLocation';
 
@@ -57,7 +57,9 @@ if (typeof window !== 'undefined') {
   if (Math.floor(Math.random() * 8) > 1) {
     identify('user_' + Math.random().toString(16).substr(2, 8), randomUser);
 
-    // TODO: this doesnt work :(
+    // Removing the automatically set user_agent
+    removeSignalAttribute('user_agent.original');
+    // So that we can add our own faked one.
     addSignalAttribute('user_agent.original', randomUser.userAgent);
 
     for (const [key, value] of Object.entries(createRandomLocation())) {
