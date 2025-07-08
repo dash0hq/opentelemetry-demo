@@ -1,3 +1,6 @@
+// Copyright The OpenTelemetry Authors
+// SPDX-License-Identifier: Apache-2.0
+
 const prefix = 'persisted_call';
 
 export function persistedCall<T>(key: string, fn: () => T): () => T {
