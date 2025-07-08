@@ -21,6 +21,7 @@ declare global {
       NEXT_PUBLIC_OTEL_SERVICE_NAME?: string;
       NEXT_PUBLIC_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT?: string;
       IS_SYNTHETIC_REQUEST?: string;
+      NEXT_PUBLIC_DASH0_WEB_SDK_URL: string;
     };
   }
 }
@@ -47,11 +48,9 @@ if (typeof window !== 'undefined') {
 
     serviceName: window.ENV.NEXT_PUBLIC_OTEL_SERVICE_NAME!,
     endpoint: {
-      // Replace this with the endpoint url identified during preparation
-      url: window.ENV.NEXT_PUBLIC_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT!.replace('/v1/traces', ''),
-      // Replace this with your auth token you created earlier
-      // Ideally inject the value at build time to not commit the token to git, even if its effectively public
-      authToken: '<YOUR_TOKEN>',
+      url: window.ENV.NEXT_PUBLIC_DASH0_WEB_SDK_URL,
+      // We provide an empty token, because since we're using a proxy, there's no need for an actual token here.
+      authToken: '',
     },
   });
 

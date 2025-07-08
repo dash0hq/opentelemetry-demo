@@ -23,12 +23,12 @@ export default class MyDocument extends Document<{ envString: string }> {
       const baggage = propagation.getBaggage(context.active());
       const isSyntheticRequest = baggage?.getEntry('synthetic_request')?.value === 'true';
 
-      console.log('PUBLIC_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT');
-      console.log(PUBLIC_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT);
-
       const otlpTracesEndpoint = isSyntheticRequest
         ? `http://${OTEL_COLLECTOR_HOST}:4318/v1/traces`
         : PUBLIC_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT;
+
+      // The SDK expects an endpoint without the /v1/traces suffix.
+      const dash0WebSdkUrl = otlpTracesEndpoint?.replace('/v1/traces', '');
 
       const envString = `
         window.ENV = {
@@ -36,6 +36,7 @@ export default class MyDocument extends Document<{ envString: string }> {
           NEXT_PUBLIC_OTEL_SERVICE_NAME: '${WEB_OTEL_SERVICE_NAME}',
           NEXT_PUBLIC_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: '${otlpTracesEndpoint}',
           IS_SYNTHETIC_REQUEST: '${isSyntheticRequest}',
+          NEXT_PUBLIC_DASH0_WEB_SDK_URL: '${dash0WebSdkUrl}',
         };`;
       return {
         ...initialProps,
