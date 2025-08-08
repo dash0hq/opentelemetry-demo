@@ -4,12 +4,10 @@
 import '../styles/globals.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App, { AppContext, AppProps } from 'next/app';
-import { getCookie } from 'cookies-next';
 import CurrencyProvider from '../providers/Currency.provider';
 import CartProvider from '../providers/Cart.provider';
 import { ThemeProvider } from 'styled-components';
 import Theme from '../styles/Theme';
-import FrontendTracer from '../utils/telemetry/FrontendTracer';
 import { init, identify, addSignalAttribute, removeSignalAttribute } from '@dash0/sdk-web';
 import { createRandomUser } from '../utils/faker/createRandomUser';
 import { createRandomLocation } from '../utils/faker/createRandomLocation';
@@ -24,11 +22,6 @@ declare global {
       NEXT_PUBLIC_DASH0_WEB_SDK_URL: string;
     };
   }
-}
-
-if (typeof window !== 'undefined') {
-  const collector = getCookie('otelCollectorUrl')?.toString() || '';
-  FrontendTracer(collector);
 }
 
 if (typeof window !== 'undefined') {
