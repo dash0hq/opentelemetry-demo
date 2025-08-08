@@ -21,6 +21,14 @@ declare global {
       IS_SYNTHETIC_REQUEST?: string;
       NEXT_PUBLIC_DASH0_WEB_SDK_URL: string;
     };
+    seed?: {
+        email: string;
+        location: {
+            countryCode: string;
+            continentCode: string;
+            locality: string;
+        }
+    }
   }
 }
 
@@ -28,7 +36,7 @@ if (typeof window !== 'undefined') {
   /**
    * NOTE: This instrumentation is mostly focused on creating random user data and is not how the Dash0 Web SDK should be used.
    */
-  const randomUser = createRandomUser();
+  const randomUser = createRandomUser(window.seed?.email);
 
   init({
     pageViewInstrumentation: {
@@ -50,7 +58,7 @@ if (typeof window !== 'undefined') {
     // So that we can add our own faked one.
     addSignalAttribute('user_agent.original', randomUser.userAgent);
 
-    for (const [key, value] of Object.entries(createRandomLocation())) {
+    for (const [key, value] of Object.entries(createRandomLocation(window.seed?.location))) {
       addSignalAttribute(key, value);
     }
   }
