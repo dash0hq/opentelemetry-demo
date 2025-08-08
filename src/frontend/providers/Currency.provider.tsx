@@ -41,7 +41,7 @@ const CurrencyProvider = ({ children }: IProps) => {
   const onSelectCurrency = useCallback((currencyCode: string) => {
     setSelectedCurrency(currencyCode);
     SessionGateway.setSessionValue('currencyCode', currencyCode);
-    sendEvent('currency_switched', { attributes: { currencyCode } });
+    sendEvent('currency_switched', { attributes: { currencyCode }, title: `Switched to currency ${currencyCode}` });
   }, []);
 
   const currencyCodeList = currencyCodeListUnsorted.sort();

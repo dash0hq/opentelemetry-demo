@@ -146,6 +146,7 @@ if browser_traffic_enabled:
             try:
                 page.on("console", lambda msg: print(msg.text))
                 await page.route('**/*', add_baggage_header)
+                await seed_person(page)
                 await page.goto("/cart", wait_until="domcontentloaded")
                 await page.select_option('[name="currency_code"]', 'CHF')
                 await page.wait_for_timeout(2000)  # giving the browser time to export the traces
@@ -158,6 +159,7 @@ if browser_traffic_enabled:
             try:
                 page.on("console", lambda msg: print(msg.text))
                 await page.route('**/*', add_baggage_header)
+                await seed_person(page)
                 await page.goto("/", wait_until="domcontentloaded")
                 await page.click('p:has-text("Roof Binoculars")')
                 await page.click('button:has-text("Add To Cart")')
@@ -171,17 +173,33 @@ if browser_traffic_enabled:
             try:
                 page.on("console", lambda msg: print(msg.text))
                 await page.route('**/*', add_baggage_header)
+                await seed_person(page)
 
                 async with event(self, 'View shop'):
                     await page.goto("/", wait_until="domcontentloaded")
                     await page.wait_for_timeout(random.randint(2000, 15000))  # emulating user
+
                 async with event(self, 'Browse products'):
-                    await page.click(":nth-match([data-cy=product-card], " + str(random.randint(1, 4)) + ")")
-                    await page.wait_for_timeout(random.randint(2000, 15000))
-                    await page.click(":nth-match([data-cy=product-card], " + str(random.randint(1, 4)) + ")")
-                    await page.wait_for_timeout(random.randint(2000, 15000))
-                    await page.click(":nth-match([data-cy=product-card], " + str(random.randint(1, 4)) + ")")
-                    await page.wait_for_timeout(random.randint(2000, 15000))
+                    use_tabs = random.randint(0, 1) == 0
+                    if use_tabs:
+                        await page.click(":nth-match([data-cy=product-card], " + str(random.randint(1, 4)) + ")", button="middle")
+                        await page.wait_for_timeout(random.randint(2000, 15000))
+                        tab1 = await self.browser_context.new_page()
+                        await tab1.route('**/*', add_baggage_header)
+                        await tab1.goto("/" + random.choice(products), wait_until="domcontentloaded")
+                        await page.wait_for_timeout(random.randint(2000, 15000))
+                        await page.click(":nth-match([data-cy=product-card], " + str(random.randint(1, 4)) + ")")
+                        tab2 = await self.browser_context.new_page()
+                        await tab2.route('**/*', add_baggage_header)
+                        await tab2.goto("/" + random.choice(products), wait_until="domcontentloaded")
+                        await page.wait_for_timeout(random.randint(2000, 15000))
+                    else:
+                        await page.click(":nth-match([data-cy=product-card], " + str(random.randint(1, 4)) + ")")
+                        await page.wait_for_timeout(random.randint(2000, 15000))
+                        await page.click(":nth-match([data-cy=product-card], " + str(random.randint(1, 4)) + ")")
+                        await page.wait_for_timeout(random.randint(2000, 15000))
+                        await page.click(":nth-match([data-cy=product-card], " + str(random.randint(1, 4)) + ")")
+                        await page.wait_for_timeout(random.randint(2000, 15000))
 
                 if (random.randint(0, 12) == 0): # Change currency with a chance of 1:12
                     await page.select_option('[name="currency_code"]', 'CHF')
@@ -215,3 +233,16 @@ async def add_baggage_header(route: Route, request: Request):
         'baggage': 'synthetic_request=true'
     }
     await route.continue_(headers=headers)
+
+async def seed_person(page: PageWithRetry):
+    person = random.choice(people)
+    await page.add_init_script(f"""
+    window.seed = {{
+        email: '{person['email']}',
+        location: {{
+            countryCode: '{person['address']['countryCode']}',
+            continentCode: '{person['address']['continentCode']}',
+            locality: '{person['address']['city']}'
+        }}
+    }}
+    """)

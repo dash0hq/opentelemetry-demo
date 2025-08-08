@@ -3,8 +3,8 @@
 
 const prefix = 'persisted_call';
 
-export function persistedCall<T>(key: string, fn: () => T): () => T {
-  return () => {
+export function persistedCall<P, T>(key: string, fn: (args: P) => T): (args: P) => T {
+  return (args: P) => {
     const persistedResult = sessionStorage.getItem(`${prefix}_${key}`);
 
     if (persistedResult) {
@@ -15,7 +15,7 @@ export function persistedCall<T>(key: string, fn: () => T): () => T {
       }
     }
 
-    const result = fn();
+    const result = fn(args);
     sessionStorage.setItem(`${prefix}_${key}`, JSON.stringify(result));
     return result;
   };

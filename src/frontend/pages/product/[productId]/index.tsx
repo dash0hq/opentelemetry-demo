@@ -52,6 +52,7 @@ const ProductDetail: NextPage = () => {
   const onAddItem = useCallback(async () => {
     sendEvent('product_added_to_cart', {
       attributes: { productId, quantity },
+      title: `Added ${name} to cart`
     });
 
     await addItem({
