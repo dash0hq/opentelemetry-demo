@@ -180,26 +180,17 @@ if browser_traffic_enabled:
                     await page.wait_for_timeout(random.randint(2000, 15000))  # emulating user
 
                 async with event(self, 'Browse products'):
-                    use_tabs = random.randint(0, 1) == 0
-                    if use_tabs:
-                        await page.click(":nth-match([data-cy=product-card], " + str(random.randint(1, 4)) + ")", button="middle")
-                        await page.wait_for_timeout(random.randint(2000, 15000))
-                        tab1 = await self.browser_context.new_page()
-                        await tab1.route('**/*', add_baggage_header)
-                        await tab1.goto("/" + random.choice(products), wait_until="domcontentloaded")
-                        await page.wait_for_timeout(random.randint(2000, 15000))
-                        await page.click(":nth-match([data-cy=product-card], " + str(random.randint(1, 4)) + ")")
-                        tab2 = await self.browser_context.new_page()
-                        await tab2.route('**/*', add_baggage_header)
-                        await tab2.goto("/" + random.choice(products), wait_until="domcontentloaded")
-                        await page.wait_for_timeout(random.randint(2000, 15000))
-                    else:
-                        await page.click(":nth-match([data-cy=product-card], " + str(random.randint(1, 4)) + ")")
-                        await page.wait_for_timeout(random.randint(2000, 15000))
-                        await page.click(":nth-match([data-cy=product-card], " + str(random.randint(1, 4)) + ")")
-                        await page.wait_for_timeout(random.randint(2000, 15000))
-                        await page.click(":nth-match([data-cy=product-card], " + str(random.randint(1, 4)) + ")")
-                        await page.wait_for_timeout(random.randint(2000, 15000))
+                    await page.click(":nth-match([data-cy=product-card], " + str(random.randint(1, 4)) + ")", button="middle")
+                    await page.wait_for_timeout(random.randint(2000, 15000))
+                    tab1 = await self.browser_context.new_page()
+                    await tab1.route('**/*', add_baggage_header)
+                    await tab1.goto("/" + random.choice(products), wait_until="domcontentloaded")
+                    await page.wait_for_timeout(random.randint(2000, 15000))
+                    await page.click(":nth-match([data-cy=product-card], " + str(random.randint(1, 4)) + ")")
+                    tab2 = await self.browser_context.new_page()
+                    await tab2.route('**/*', add_baggage_header)
+                    await tab2.goto("/" + random.choice(products), wait_until="domcontentloaded")
+                    await page.wait_for_timeout(random.randint(2000, 15000))
 
                 if (random.randint(0, 12) == 0): # Change currency with a chance of 1:12
                     await page.select_option('[name="currency_code"]', 'CHF')
@@ -211,6 +202,7 @@ if browser_traffic_enabled:
                     await page.wait_for_timeout(random.randint(2000, 15000))
                     await page.click('button:has-text("Add To Cart")')
                     await page.wait_for_timeout(random.randint(2000, 15000))
+
                 async with event(self, 'View cart'):
                     await page.goto("/cart", wait_until="domcontentloaded")
                     await page.wait_for_timeout(random.randint(2000, 15000))  # giving the browser time to export the traces
