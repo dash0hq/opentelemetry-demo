@@ -8,5 +8,4 @@
 --     All values between set a percentage chance on each request
 --     example: 0.55 is enabled 55% of the time
 
--- UPDATE public.featureflags SET enabled = 0.55 WHERE name = 'cartServiceFailure';
-
+UPDATE public.featureflags SET enabled = 0.1 WHERE name = 'adServiceFailure';
