@@ -10056,7 +10056,9 @@ spec:
             value: service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo,vcs.repository.url.full=https://github.com/dash0hq/opentelemetry-demo
           resources:
             limits:
-              memory: 120Mi
+              memory: 3000Mi
+            requests:
+              memory: 1900Mi
 ---
 # Source: opentelemetry-demo/templates/component.yaml
 apiVersion: apps/v1
