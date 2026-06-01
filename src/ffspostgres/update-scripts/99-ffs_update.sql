@@ -10,3 +10,4 @@
 
 -- UPDATE public.featureflags SET enabled = 0.55 WHERE name = 'cartServiceFailure';
 
+UPDATE public.featureflags SET enabled = 0.10 WHERE name = 'adServiceFailure';
