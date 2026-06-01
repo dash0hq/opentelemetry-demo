@@ -9552,7 +9552,7 @@ spec:
           resources:
             limits:
               cpu: 100m
-              memory: 100Mi
+              memory: 150Mi
 ---
 # Source: opentelemetry-demo/templates/component.yaml
 apiVersion: apps/v1
