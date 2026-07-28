@@ -143,16 +143,22 @@ jobs:
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
+      # OIDC-based ECR auth (PLA-1294): only runs when pushing to ECR.
+      # The github-ci-cd-ecr role only trusts refs/heads/main and refs/tags/*,
+      # which is exactly when inputs.push is true (release / nightly). PR and
+      # feature-branch builds (push=false) skip ECR auth entirely, since they
+      # never push and their refs are not trusted by the role.
       - name: Configure AWS credentials
+        if: ${{ inputs.push }}
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{secrets.DEPLOYMENT_WRITE_ECR_ACCESS_KEY}}
-          aws-secret-access-key: ${{secrets.DEPLOYMENT_WRITE_ECR_SECRET_ACCESS_KEY}}
+          role-to-assume: arn:aws:iam::718306648796:role/github-ci-cd-ecr
           aws-region: us-west-2
           mask-aws-account-id: true
 
       - name: Login to Amazon ECR
         id: login-ecr
+        if: ${{ inputs.push }}
         uses: aws-actions/amazon-ecr-login@v2
         with:
           mask-password: true
