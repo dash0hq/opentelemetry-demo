@@ -25,7 +25,8 @@ FROM base as grpc-builder
 WORKDIR /usr/src/app/
 COPY ./pb/ ./proto/
 
-RUN python -m pip install grpcio-tools==1.59.2
+# grpcio-tools 1.59.2 imports pkg_resources, which setuptools 81 removed
+RUN python -m pip install grpcio-tools==1.59.2 "setuptools<81"
 RUN python -m grpc_tools.protoc -I=./proto/ --python_out=./ --grpc_python_out=./ ./proto/demo.proto
 
 #
