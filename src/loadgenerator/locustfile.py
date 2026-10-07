@@ -236,12 +236,12 @@ if browser_traffic_enabled:
                     await browse_idle(page, 2000, 15000)
                     tab1 = await self.browser_context.new_page()
                     await tab1.route('**/*', add_baggage_header)
-                    await tab1.goto("/" + random.choice(products), wait_until="domcontentloaded")
+                    await tab1.goto("/product/" + random.choice(products), wait_until="domcontentloaded")
                     await browse_idle(page, 2000, 15000)
                     await human_click(page, ":nth-match([data-cy=product-card], " + str(random.randint(1, 4)) + ")")
                     tab2 = await self.browser_context.new_page()
                     await tab2.route('**/*', add_baggage_header)
-                    await tab2.goto("/" + random.choice(products), wait_until="domcontentloaded")
+                    await tab2.goto("/product/" + random.choice(products), wait_until="domcontentloaded")
                     await browse_idle(page, 2000, 15000)
 
                 if (random.randint(0, 12) == 0): # Change currency with a chance of 1:12
