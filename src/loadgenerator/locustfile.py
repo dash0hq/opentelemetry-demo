@@ -7,7 +7,9 @@
 import json
 import os
 import random
+import time
 import uuid
+import weakref
 from locust import HttpUser, task, between
 from locust_plugins.users.playwright import PlaywrightUser, pw, PageWithRetry, event
 
@@ -134,6 +136,55 @@ class WebsiteUser(HttpUser):
         self.index()
 
 
+# Playwright's default viewport, which locust_plugins uses for its browser contexts.
+VIEWPORT_WIDTH, VIEWPORT_HEIGHT = 1280, 720
+mouse_positions = weakref.WeakKeyDictionary()
+
+async def move_mouse(page, x, y):
+    """Moves the cursor along a curved path, so session replays show realistic mouse movement.
+    page.click() alone jumps straight to the target with a single mousemove event."""
+    start_x, start_y = mouse_positions.get(page, (VIEWPORT_WIDTH / 2, VIEWPORT_HEIGHT / 2))
+    # Quadratic Bezier curve through a random control point
+    control_x = (start_x + x) / 2 + random.uniform(-150, 150)
+    control_y = (start_y + y) / 2 + random.uniform(-150, 150)
+    # rrweb samples the cursor about every 50ms, so finer steps only cost the headless browser CPU
+    steps = max(5, min(20, int(((x - start_x) ** 2 + (y - start_y) ** 2) ** 0.5 / 40)))
+    for i in range(1, steps + 1):
+        t = i / steps
+        await page.mouse.move(
+            (1 - t) ** 2 * start_x + 2 * (1 - t) * t * control_x + t ** 2 * x,
+            (1 - t) ** 2 * start_y + 2 * (1 - t) * t * control_y + t ** 2 * y,
+        )
+        await page.wait_for_timeout(random.randint(30, 50))
+    mouse_positions[page] = (x, y)
+
+async def move_to(page, selector):
+    """Moves the cursor to a random point inside the element and returns that point relative to it."""
+    element = page.locator(selector).first
+    await element.scroll_into_view_if_needed()
+    box = await element.bounding_box()
+    if not box:
+        return None
+    offset_x = box["width"] * random.uniform(0.3, 0.7)
+    offset_y = box["height"] * random.uniform(0.3, 0.7)
+    await move_mouse(page, box["x"] + offset_x, box["y"] + offset_y)
+    return {"x": offset_x, "y": offset_y}
+
+async def human_click(page, selector, **kwargs):
+    """Moves the cursor to the element, then clicks where the cursor is."""
+    position = await move_to(page, selector)
+    await page.click(selector, position=position, **kwargs)
+
+async def browse_idle(page, min_ms, max_ms):
+    """Waits like a user reading the page, moving the cursor now and then."""
+    deadline = time.monotonic() + random.randint(min_ms, max_ms) / 1000
+    while time.monotonic() < deadline:
+        if random.random() < 0.4:
+            await move_mouse(page, random.uniform(50, VIEWPORT_WIDTH - 50), random.uniform(50, VIEWPORT_HEIGHT - 50))
+        remaining_ms = int((deadline - time.monotonic()) * 1000)
+        if remaining_ms > 0:
+            await page.wait_for_timeout(min(random.randint(800, 2500), remaining_ms))
+
 browser_traffic_enabled = os.environ.get("LOCUST_BROWSER_TRAFFIC_ENABLED", "").lower() in ("true", "yes", "on")
 
 if browser_traffic_enabled:
@@ -148,6 +199,7 @@ if browser_traffic_enabled:
                 await page.route('**/*', add_baggage_header)
                 await seed_person(page)
                 await page.goto("/cart", wait_until="domcontentloaded")
+                await move_to(page, '[name="currency_code"]')
                 await page.select_option('[name="currency_code"]', 'CHF')
                 await page.wait_for_timeout(2000)  # giving the browser time to export the traces
             except:
@@ -161,8 +213,8 @@ if browser_traffic_enabled:
                 await page.route('**/*', add_baggage_header)
                 await seed_person(page)
                 await page.goto("/", wait_until="domcontentloaded")
-                await page.click('p:has-text("Roof Binoculars")')
-                await page.click('button:has-text("Add To Cart")')
+                await human_click(page, 'p:has-text("Roof Binoculars")')
+                await human_click(page, 'button:has-text("Add To Cart")')
                 await page.wait_for_timeout(2000)  # giving the browser time to export the traces
             except:
                 pass
@@ -177,44 +229,45 @@ if browser_traffic_enabled:
 
                 async with event(self, 'View shop'):
                     await page.goto("/", wait_until="domcontentloaded")
-                    await page.wait_for_timeout(random.randint(2000, 15000))  # emulating user
+                    await browse_idle(page, 2000, 15000)  # emulating user
 
                 async with event(self, 'Browse products'):
-                    await page.click(":nth-match([data-cy=product-card], " + str(random.randint(1, 4)) + ")", button="middle")
-                    await page.wait_for_timeout(random.randint(2000, 15000))
+                    await human_click(page, ":nth-match([data-cy=product-card], " + str(random.randint(1, 4)) + ")", button="middle")
+                    await browse_idle(page, 2000, 15000)
                     tab1 = await self.browser_context.new_page()
                     await tab1.route('**/*', add_baggage_header)
                     await tab1.goto("/" + random.choice(products), wait_until="domcontentloaded")
-                    await page.wait_for_timeout(random.randint(2000, 15000))
-                    await page.click(":nth-match([data-cy=product-card], " + str(random.randint(1, 4)) + ")")
+                    await browse_idle(page, 2000, 15000)
+                    await human_click(page, ":nth-match([data-cy=product-card], " + str(random.randint(1, 4)) + ")")
                     tab2 = await self.browser_context.new_page()
                     await tab2.route('**/*', add_baggage_header)
                     await tab2.goto("/" + random.choice(products), wait_until="domcontentloaded")
-                    await page.wait_for_timeout(random.randint(2000, 15000))
+                    await browse_idle(page, 2000, 15000)
 
                 if (random.randint(0, 12) == 0): # Change currency with a chance of 1:12
+                    await move_to(page, '[name="currency_code"]')
                     await page.select_option('[name="currency_code"]', 'CHF')
 
                 async with event(self, 'Choose product'):
                     await page.goto("/", wait_until="domcontentloaded")
-                    await page.wait_for_timeout(random.randint(2000, 15000))
-                    await page.click('p:has-text("Roof Binoculars")')
-                    await page.wait_for_timeout(random.randint(2000, 15000))
-                    await page.click('button:has-text("Add To Cart")')
-                    await page.wait_for_timeout(random.randint(2000, 15000))
+                    await browse_idle(page, 2000, 15000)
+                    await human_click(page, 'p:has-text("Roof Binoculars")')
+                    await browse_idle(page, 2000, 15000)
+                    await human_click(page, 'button:has-text("Add To Cart")')
+                    await browse_idle(page, 2000, 15000)
 
                 async with event(self, 'View cart'):
                     await page.goto("/cart", wait_until="domcontentloaded")
-                    await page.wait_for_timeout(random.randint(2000, 15000))  # giving the browser time to export the traces
+                    await browse_idle(page, 2000, 15000)  # giving the browser time to export the traces
 
                 if (random.randint(0, 8) == 0): # directly open unknown product page with a chance of 1:8
                     await page.goto("/product/ZFYYMZ29E6", wait_until="domcontentloaded")
 
                 if (random.randint(0, 5) == 0): # checkout with a chance of 1:5
-                    await page.click('a[data-cy="cart-icon"]')
-                    await page.click('button:has-text("Go to Shopping Cart")')
-                    await page.wait_for_timeout(random.randint(2000, 15000))
-                    await page.click('button:has-text("Place Order")')
+                    await human_click(page, 'a[data-cy="cart-icon"]')
+                    await human_click(page, 'button:has-text("Go to Shopping Cart")')
+                    await browse_idle(page, 2000, 15000)
+                    await human_click(page, 'button:has-text("Place Order")')
             except:
                 raise
 
