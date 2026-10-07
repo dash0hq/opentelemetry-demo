@@ -9,6 +9,7 @@ import CartProvider from '../providers/Cart.provider';
 import { ThemeProvider } from 'styled-components';
 import Theme from '../styles/Theme';
 import { init, identify, addSignalAttribute, removeSignalAttribute } from '@dash0/sdk-web';
+import { recorder } from '@dash0/sdk-web/session-recording';
 import { createRandomUser } from '../utils/faker/createRandomUser';
 import { createRandomLocation } from '../utils/faker/createRandomLocation';
 
@@ -20,6 +21,7 @@ declare global {
       NEXT_PUBLIC_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT?: string;
       IS_SYNTHETIC_REQUEST?: string;
       NEXT_PUBLIC_DASH0_WEB_SDK_URL: string;
+      NEXT_PUBLIC_ASSETS_BASE_URL?: string;
     };
     seed?: {
         email: string;
@@ -47,6 +49,9 @@ if (typeof window !== 'undefined') {
       url: window.ENV.NEXT_PUBLIC_DASH0_WEB_SDK_URL,
       // We provide an empty token, because since we're using a proxy, there's no need for an actual token here.
       authToken: '',
+    },
+    sessionRecording: {
+      recorder,
     },
   });
 

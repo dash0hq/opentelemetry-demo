@@ -13,6 +13,7 @@ import ProductPrice from '../../../components/ProductPrice';
 import Recommendations from '../../../components/Recommendations';
 import Select from '../../../components/Select';
 import { CypressFields } from '../../../utils/Cypress';
+import { assetUrl } from '../../../utils/assetUrl';
 import ApiGateway from '../../../gateways/Api.gateway';
 import { Product } from '../../../protos/demo';
 import AdProvider from '../../../providers/Ad.provider';
@@ -70,7 +71,7 @@ const ProductDetail: NextPage = () => {
       <Layout>
         <S.ProductDetail data-cy={CypressFields.ProductDetail}>
           <S.Container>
-            <S.Image $src={'/images/products/' + picture} data-cy={CypressFields.ProductPicture} />
+            <S.Image $src={assetUrl('/images/products/' + picture)} data-cy={CypressFields.ProductPicture} />
             <S.Details>
               <S.Name data-cy={CypressFields.ProductName}>{name}</S.Name>
               <S.Description data-cy={CypressFields.ProductDescription}>{description}</S.Description>
@@ -90,7 +91,7 @@ const ProductDetail: NextPage = () => {
                 ))}
               </Select>
               <S.AddToCart data-cy={CypressFields.ProductAddToCart} onClick={onAddItem}>
-                <Image src="/icons/Cart.svg" height="15px" width="15px" alt="cart" /> Add To Cart
+                <Image src={assetUrl("/icons/Cart.svg")} unoptimized height="15px" width="15px" alt="cart" /> Add To Cart
               </S.AddToCart>
             </S.Details>
           </S.Container>

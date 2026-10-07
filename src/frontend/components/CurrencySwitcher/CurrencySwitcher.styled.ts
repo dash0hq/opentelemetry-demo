@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import styled from 'styled-components';
+import { assetUrl } from '../../utils/assetUrl';
 
 export const CurrencySwitcher = styled.div`
   display: flex;
@@ -35,10 +36,10 @@ export const SelectedConcurrency = styled.span`
   display: inline-block;
 `;
 
-export const Arrow = styled.img.attrs({
-  src: '/icons/Chevron.svg',
+export const Arrow = styled.img.attrs(() => ({
+  src: assetUrl('/icons/Chevron.svg'),
   alt: 'arrow',
-})`
+}))`
   position: absolute;
   right: 15px;
   width: 12px;

@@ -5,3 +5,5 @@ opentelemetry-exporter-otlp-proto-grpc==1.22.0
 python-dotenv==1.0.0
 python-json-logger==2.0.7
 psutil==5.9.6 # Importing this will also import opentelemetry-instrumentation-system-metrics when running opentelemetry-bootstrap
+# pkg_resources (removed in setuptools 81) is imported by opentelemetry-instrumentation 0.43b0
+setuptools<81

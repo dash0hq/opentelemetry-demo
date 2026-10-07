@@ -208,6 +208,7 @@ jobs:
           file: ${{ matrix.file_tag.file }}
           platforms: linux/amd64,linux/arm64
           push: ${{ inputs.push }}
+          build-args: ${{ matrix.file_tag.tag_suffix == 'frontend' && format('DEMO_RELEASE_VERSION={0}', inputs.version) || '' }}
           tags: |
             ${{ env.AWS_ECR_REPO }}:${{ inputs.version }}-${{ matrix.file_tag.tag_suffix }}
             ${{ env.AWS_ECR_REPO }}:latest-${{ matrix.file_tag.tag_suffix }}

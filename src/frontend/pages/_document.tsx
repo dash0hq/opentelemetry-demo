@@ -4,6 +4,7 @@
 import Document, { DocumentContext, Html, Head, Main, NextScript } from 'next/document';
 import { ServerStyleSheet } from 'styled-components';
 import { context, propagation } from '@opentelemetry/api';
+import { resolveAssetsBaseUrl } from '../utils/assetUrl';
 
 const { ENV_PLATFORM, WEB_OTEL_SERVICE_NAME, PUBLIC_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT, OTEL_COLLECTOR_HOST } =
   process.env;
@@ -37,6 +38,7 @@ export default class MyDocument extends Document<{ envString: string }> {
           NEXT_PUBLIC_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: '${otlpTracesEndpoint}',
           IS_SYNTHETIC_REQUEST: '${isSyntheticRequest}',
           NEXT_PUBLIC_DASH0_WEB_SDK_URL: '${dash0WebSdkUrl}',
+          NEXT_PUBLIC_ASSETS_BASE_URL: '${resolveAssetsBaseUrl()}',
         };`;
       return {
         ...initialProps,

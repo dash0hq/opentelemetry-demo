@@ -3,6 +3,7 @@
 
 import Link from 'next/link';
 import styled from 'styled-components';
+import { assetUrl } from '../../utils/assetUrl';
 
 export const Header = styled.header`
   background-color: #853b5c;
@@ -46,9 +47,9 @@ export const NavBarBrand = styled(Link)`
   }
 `;
 
-export const BrandImg = styled.img.attrs({
-  src: '/images/opentelemetry-demo-logo.png',
-})`
+export const BrandImg = styled.img.attrs(() => ({
+  src: assetUrl('/images/opentelemetry-demo-logo.png'),
+}))`
   width: 280px;
   height: auto;
 `;

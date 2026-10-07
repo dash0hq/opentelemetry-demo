@@ -5,6 +5,7 @@ import { CypressFields } from '../../utils/Cypress';
 import { Product } from '../../protos/demo';
 import ProductPrice from '../ProductPrice';
 import * as S from './ProductCard.styled';
+import { assetUrl } from '../../utils/assetUrl';
 
 interface IProps {
   product: Product;
@@ -25,7 +26,7 @@ const ProductCard = ({
   return (
     <S.Link href={`/product/${id}`}>
       <S.ProductCard data-cy={CypressFields.ProductCard}>
-        <S.Image $src={"/images/products/" + picture} />
+        <S.Image $src={assetUrl("/images/products/" + picture)} />
         <div>
           <S.ProductName>{name}</S.ProductName>
           <S.ProductPrice>

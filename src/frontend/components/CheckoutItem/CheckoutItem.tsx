@@ -8,6 +8,7 @@ import { Address } from '../../protos/demo';
 import { IProductCheckoutItem } from '../../types/Cart';
 import ProductPrice from '../ProductPrice';
 import * as S from './CheckoutItem.styled';
+import { assetUrl } from '../../utils/assetUrl';
 
 interface IProps {
   checkoutItem: IProductCheckoutItem;
@@ -29,7 +30,7 @@ const CheckoutItem = ({
   return (
     <S.CheckoutItem data-cy={CypressFields.CheckoutItem}>
       <S.ItemDetails>
-        <S.ItemImage src={"/images/products/" + picture} alt={name} />
+        <S.ItemImage src={assetUrl("/images/products/" + picture)} alt={name} />
         <S.Details>
           <S.ItemName>{name}</S.ItemName>
           <p>Quantity: {quantity}</p>
@@ -52,7 +53,7 @@ const CheckoutItem = ({
         )}
       </S.ShippingData>
       <S.Status>
-        <Image src="/icons/Check.svg" alt="check" height="14" width="16" /> <span>Done</span>
+        <Image src={assetUrl("/icons/Check.svg")} unoptimized alt="check" height="14" width="16" /> <span>Done</span>
       </S.Status>
     </S.CheckoutItem>
   );

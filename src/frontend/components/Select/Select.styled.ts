@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import styled from 'styled-components';
+import { assetUrl } from '../../utils/assetUrl';
 
 export const Select = styled.select`
   width: 100%;
@@ -19,10 +20,10 @@ export const SelectContainer = styled.div`
   width: min-content;
 `;
 
-export const Arrow = styled.img.attrs({
-  src: '/icons/Chevron.svg',
+export const Arrow = styled.img.attrs(() => ({
+  src: assetUrl('/icons/Chevron.svg'),
   alt: 'select',
-})`
+}))`
   position: absolute;
   right: 25px;
   top: 20px;

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Product } from '../../protos/demo';
 import ProductPrice from '../ProductPrice';
 import * as S from './CartItems.styled';
+import { assetUrl } from '../../utils/assetUrl';
 
 interface IProps {
   product: Product;
@@ -19,7 +20,7 @@ const CartItem = ({
     <S.CartItem>
       <Link href={`/product/${id}`}>
         <S.NameContainer>
-          <S.CartItemImage alt={name} src={"/images/products/" + picture} />
+          <S.CartItemImage alt={name} src={assetUrl("/images/products/" + picture)} />
           <p>{name}</p>
         </S.NameContainer>
       </Link>
