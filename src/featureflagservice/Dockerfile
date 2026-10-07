@@ -27,6 +27,9 @@ ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
 
 FROM ${BUILDER_IMAGE} as builder
 
+# Debian 11 (bullseye) is end-of-life and its packages moved to archive.debian.org
+RUN sed -i -E 's#http://(deb|security)\.debian\.org#http://archive.debian.org#' /etc/apt/sources.list
+
 # install build dependencies
 RUN apt-get update -y && apt-get install -y build-essential git wget \
     && apt-get clean && rm -f /var/lib/apt/lists/*_*
@@ -85,6 +88,9 @@ RUN mix release
 # start a new build stage so that the final image will only contain
 # the compiled release and other runtime necessities
 FROM ${RUNNER_IMAGE}
+
+# Debian 11 (bullseye) is end-of-life and its packages moved to archive.debian.org
+RUN sed -i -E 's#http://(deb|security)\.debian\.org#http://archive.debian.org#' /etc/apt/sources.list
 
 RUN apt-get update -y && apt-get install -y openssl libncurses5 locales curl \
   && apt-get clean && rm -f /var/lib/apt/lists/*_*
