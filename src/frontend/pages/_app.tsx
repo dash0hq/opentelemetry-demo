@@ -21,6 +21,7 @@ declare global {
       NEXT_PUBLIC_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT?: string;
       IS_SYNTHETIC_REQUEST?: string;
       NEXT_PUBLIC_DASH0_WEB_SDK_URL: string;
+      NEXT_PUBLIC_ASSETS_BASE_URL?: string;
     };
     seed?: {
         email: string;

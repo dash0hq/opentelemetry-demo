@@ -26,6 +26,10 @@ RUN apk add --no-cache protobuf-dev protoc
 
 ENV NODE_ENV=production
 
+# Set by release builds; serves images from a public URL pinned to the release tag (see utils/assetUrl.ts).
+ARG DEMO_RELEASE_VERSION=""
+ENV DEMO_RELEASE_VERSION=${DEMO_RELEASE_VERSION}
+
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nextjs -u 1001
 

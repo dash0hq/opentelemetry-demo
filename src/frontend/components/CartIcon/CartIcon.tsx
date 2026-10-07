@@ -6,6 +6,7 @@ import { CypressFields } from '../../utils/Cypress';
 import { useCart } from '../../providers/Cart.provider';
 import CartDropdown from '../CartDropdown';
 import * as S from './CartIcon.styled';
+import { assetUrl } from '../../utils/assetUrl';
 
 const CartIcon = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -16,7 +17,7 @@ const CartIcon = () => {
   return (
     <>
       <S.CartIcon data-cy={CypressFields.CartIcon} onClick={() => setIsOpen(true)}>
-        <S.Icon src="/icons/CartIcon.svg" alt="Cart icon" title="Cart" />
+        <S.Icon src={assetUrl("/icons/CartIcon.svg")} alt="Cart icon" title="Cart" />
         {!!items.length && <S.ItemsCount data-cy={CypressFields.CartItemCount}>{items.length}</S.ItemsCount>}
       </S.CartIcon>
       <CartDropdown productList={items} isOpen={isOpen} onClose={() => setIsOpen(false)} />
