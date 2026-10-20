@@ -12,6 +12,8 @@
   },
   "dependencies": {
     "@bufbuild/protobuf": "^2.15.0",
+    "@dash0/sdk-web": "0.27.0",
+    "@faker-js/faker": "10.6.0",
     "@grpc/grpc-js": "1.14.4",
     "@openfeature/flagd-provider": "0.16.1",
     "@openfeature/flagd-web-provider": "0.7.4",

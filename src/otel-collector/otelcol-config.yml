@@ -23,6 +23,9 @@ receivers:
             - "content-type"
             - "traceparent"
             - "baggage"
+            # Sent by the Dash0 Web SDK in the frontend
+            - "authorization"
+            - "content-encoding"
   http_check/frontend-proxy:
     targets:
       - endpoint: http://${env:FRONTEND_PROXY_ADDR}

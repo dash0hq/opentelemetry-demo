@@ -19,6 +19,7 @@ import AdProvider from '../../../providers/Ad.provider';
 import { useCart } from '../../../providers/Cart.provider';
 import * as S from '../../../styles/ProductDetail.styled';
 import { useCurrency } from '../../../providers/Currency.provider';
+import { sendEvent } from '@dash0/sdk-web';
 
 const quantityOptions = new Array(10).fill(0).map((_, i) => i + 1);
 
@@ -52,12 +53,17 @@ const ProductDetail: NextPage = () => {
   ) as { data: Product };
 
   const onAddItem = useCallback(async () => {
+    sendEvent('product_added_to_cart', {
+      attributes: { productId, quantity },
+      title: `Added ${name} to cart`,
+    });
+
     await addItem({
       productId,
       quantity,
     });
     push('/cart');
-  }, [addItem, productId, quantity, push]);
+  }, [addItem, productId, quantity, push, name]);
 
   return (
     <AdProvider

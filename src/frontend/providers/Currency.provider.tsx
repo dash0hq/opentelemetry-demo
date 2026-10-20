@@ -5,6 +5,7 @@ import { createContext, useCallback, useContext, useMemo, useState, useEffect } 
 import { useQuery } from '@tanstack/react-query';
 import ApiGateway from '../gateways/Api.gateway';
 import SessionGateway from '../gateways/Session.gateway';
+import { sendEvent } from '@dash0/sdk-web';
 
 const { currencyCode } = SessionGateway.getSession();
 
@@ -40,6 +41,7 @@ const CurrencyProvider = ({ children }: IProps) => {
   const onSelectCurrency = useCallback((currencyCode: string) => {
     setSelectedCurrency(currencyCode);
     SessionGateway.setSessionValue('currencyCode', currencyCode);
+    sendEvent('currency_switched', { attributes: { currencyCode }, title: `Switched to currency ${currencyCode}` });
   }, []);
 
   const currencyCodeList = currencyCodeListUnsorted.sort();

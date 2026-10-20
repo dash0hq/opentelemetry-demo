@@ -8,7 +8,9 @@ import CurrencyProvider from '../providers/Currency.provider';
 import CartProvider from '../providers/Cart.provider';
 import { ThemeProvider } from 'styled-components';
 import Theme from '../styles/Theme';
-import FrontendTracer from '../utils/telemetry/FrontendTracer';
+import { init, identify, addSignalAttribute, removeSignalAttribute } from '@dash0/sdk-web';
+import { createRandomUser } from '../utils/faker/createRandomUser';
+import { createRandomLocation } from '../utils/faker/createRandomLocation';
 import SessionGateway from '../gateways/Session.gateway';
 import { OpenFeatureProvider, OpenFeature } from '@openfeature/react-sdk';
 import { FlagdWebProvider } from '@openfeature/flagd-web-provider';
@@ -20,12 +22,49 @@ declare global {
       NEXT_PUBLIC_OTEL_SERVICE_NAME?: string;
       NEXT_PUBLIC_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT?: string;
       IS_SYNTHETIC_REQUEST?: string;
+      NEXT_PUBLIC_DASH0_WEB_SDK_URL: string;
+    };
+    seed?: {
+      email: string;
+      location: {
+        countryCode: string;
+        continentCode: string;
+        locality: string;
+      };
     };
   }
 }
 
 if (typeof window !== 'undefined') {
-  FrontendTracer();
+  /**
+   * NOTE: This instrumentation is mostly focused on creating random user data and is not how the Dash0 Web SDK should be used.
+   */
+  const randomUser = createRandomUser(window.seed?.email);
+
+  init({
+    pageViewInstrumentation: {
+      includeParts: ['SEARCH', 'HASH'],
+    },
+    serviceName: window.ENV.NEXT_PUBLIC_OTEL_SERVICE_NAME!,
+    endpoint: {
+      url: window.ENV.NEXT_PUBLIC_DASH0_WEB_SDK_URL,
+      // The endpoint is a proxy to the collector, so no token is needed.
+      authToken: '',
+    },
+  });
+
+  if (Math.floor(Math.random() * 8) > 1) {
+    identify('user_' + Math.random().toString(16).slice(2, 10), { name: randomUser.username, fullName: randomUser.fullName, email: randomUser.email });
+
+    // Replace the automatically set user agent with the fake one.
+    removeSignalAttribute('user_agent.original');
+    addSignalAttribute('user_agent.original', randomUser.userAgent);
+
+    for (const [key, value] of Object.entries(createRandomLocation(window.seed?.location))) {
+      addSignalAttribute(key, value);
+    }
+  }
+
   if (window.location) {
     const session = SessionGateway.getSession();
 
