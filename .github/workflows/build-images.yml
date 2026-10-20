@@ -16,6 +16,5 @@ jobs:
     name: Build images
     permissions:
       contents: read  # required by the component-build-images reusable workflow
-      packages: write  # required to push built images to GHCR
-    if: ${{ !github.event.repository.fork }}
+      id-token: write  # required by the component-build-images reusable workflow
     uses: $/.github/workflows/component-build-images.yml

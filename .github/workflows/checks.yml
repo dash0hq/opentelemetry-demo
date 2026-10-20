@@ -23,16 +23,11 @@ jobs:
     name: Build images
     permissions:  # required by the reusable workflow
       contents: read  # required by the component-build-images reusable workflow
-      packages: write  # required to push built images to GHCR
+      id-token: write  # required by the component-build-images reusable workflow
     uses: $/.github/workflows/component-build-images.yml
     with:
-      push: ${{ github.event_name == 'push' }}
-      force_build: ${{ github.event_name == 'push' }}
-      # Use a non-release tag for PR builds; tags are not pushed when push=false.
-      version: ${{ github.event_name == 'push' && 'main' || 'dev' }}
-    secrets:
-      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      push: false
+      version: 'dev'
 
   markdownlint:
     name: Markdown lint
