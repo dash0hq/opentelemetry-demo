@@ -18,7 +18,12 @@ pub use shipping_types::*;
 const NANOS_MULTIPLE: u32 = 10000000u32;
 
 #[post("/get-quote")]
-pub async fn get_quote(req: web::Json<GetQuoteRequest>) -> impl Responder {
+pub async fn get_quote(
+    req: web::Json<GetQuoteRequest>,
+    flag_provider: web::Data<dyn FeatureProvider>,
+) -> impl Responder {
+    simulate_slowness(&flag_provider).await;
+
     let itemct: u32 = req.items.iter().map(|item| item.quantity as u32).sum();
 
     let quote = match create_quote_from_count(itemct).await {
@@ -51,6 +56,8 @@ pub async fn ship_order(
     req: web::Json<ShipOrderRequest>,
     flag_provider: web::Data<dyn FeatureProvider>,
 ) -> impl Responder {
+    simulate_slowness(&flag_provider).await;
+
     let is_outside_us = req
         .address
         .as_ref()
@@ -101,6 +108,45 @@ pub async fn ship_order(
     HttpResponse::Ok().json(ShipOrderResponse { tracking_id: tid })
 }
 
+/// Waits a random time between the lower and upper bound flags, with the
+/// probability set by the shippingServiceSimulateSlowness flag.
+async fn simulate_slowness(flag_provider: &web::Data<dyn FeatureProvider>) {
+    let ctx = EvaluationContext::default();
+    let probability = flag_provider
+        .resolve_float_value("shippingServiceSimulateSlowness", &ctx)
+        .await
+        .map(|res| res.value)
+        .unwrap_or(0.0);
+    if random_unit() >= probability {
+        return;
+    }
+    let lower_bound = flag_provider
+        .resolve_int_value("shippingServiceSimulateSlownessLowerBound", &ctx)
+        .await
+        .map(|res| res.value)
+        .unwrap_or(0);
+    let upper_bound = flag_provider
+        .resolve_int_value("shippingServiceSimulateSlownessUpperBound", &ctx)
+        .await
+        .map(|res| res.value)
+        .unwrap_or(1000);
+    let delay_millis =
+        lower_bound + (random_unit() * (upper_bound - lower_bound).max(0) as f64) as i64;
+    info!(
+        name: "shipping.simulated_slowness",
+        delay_millis = delay_millis,
+        "Simulating shipping service slowness"
+    );
+    actix_web::rt::time::sleep(std::time::Duration::from_millis(delay_millis as u64)).await;
+}
+
+/// Returns a random number in [0, 1).
+// ponytail: takes the 53 low random bits of a v4 UUID to avoid a new rand dependency; use rand if more randomness is needed.
+fn random_unit() -> f64 {
+    let bits = (uuid::Uuid::new_v4().as_u128() as u64) & ((1u64 << 53) - 1);
+    bits as f64 / (1u64 << 53) as f64
+}
+
 #[cfg(test)]
 mod tests {
     use actix_web::{http::header::ContentType, test, App};
@@ -113,6 +159,8 @@ mod tests {
         let mut mock = MockFeatureProvider::new();
         mock.expect_resolve_int_value()
             .returning(move |_, _| Ok(ResolutionDetails::new(value)));
+        mock.expect_resolve_float_value()
+            .returning(|_, _| Ok(ResolutionDetails::new(0.0)));
         web::Data::from(Arc::new(mock) as Arc<dyn FeatureProvider>)
     }
 
@@ -167,6 +215,22 @@ mod tests {
         let start = std::time::Instant::now();
         let order = call_ship_order(Some(make_address("FR")), mock_provider(1)).await;
         assert!(start.elapsed() >= std::time::Duration::from_secs(1));
+        assert!(!order.tracking_id.is_empty());
+    }
+
+    #[actix_web::test]
+    async fn test_ship_order_simulated_slowness() {
+        let mut mock = MockFeatureProvider::new();
+        // Both bounds resolve to 300ms, so the delay is exactly 300ms.
+        mock.expect_resolve_int_value()
+            .returning(|_, _| Ok(ResolutionDetails::new(300)));
+        mock.expect_resolve_float_value()
+            .returning(|_, _| Ok(ResolutionDetails::new(1.0)));
+        let provider = web::Data::from(Arc::new(mock) as Arc<dyn FeatureProvider>);
+
+        let start = std::time::Instant::now();
+        let order = call_ship_order(Some(make_address("US")), provider).await;
+        assert!(start.elapsed() >= std::time::Duration::from_millis(300));
         assert!(!order.tracking_id.is_empty());
     }
 

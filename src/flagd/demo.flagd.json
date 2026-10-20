@@ -243,6 +243,37 @@
         "off": 0,
         "on": 1
       }
+    },
+    "shippingServiceSimulateSlowness": {
+      "defaultVariant": "off",
+      "description": "Delay shipping service requests n% of the time, by a random time between shippingServiceSimulateSlownessLowerBound and shippingServiceSimulateSlownessUpperBound",
+      "state": "ENABLED",
+      "variants": {
+        "10%": 0.1,
+        "100%": 1,
+        "25%": 0.25,
+        "50%": 0.5,
+        "75%": 0.75,
+        "off": 0
+      }
+    },
+    "shippingServiceSimulateSlownessLowerBound": {
+      "defaultVariant": "default",
+      "description": "Minimum simulated delay in milliseconds in the shipping service, if shippingServiceSimulateSlowness is on",
+      "state": "ENABLED",
+      "variants": {
+        "1sec": 1000,
+        "default": 250
+      }
+    },
+    "shippingServiceSimulateSlownessUpperBound": {
+      "defaultVariant": "default",
+      "description": "Maximum simulated delay in milliseconds in the shipping service, if shippingServiceSimulateSlowness is on",
+      "state": "ENABLED",
+      "variants": {
+        "2sec": 2000,
+        "default": 400
+      }
     }
   }
 }
