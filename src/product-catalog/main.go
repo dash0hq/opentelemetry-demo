@@ -398,6 +398,11 @@ func (p *productCatalog) GetProduct(ctx context.Context, req *pb.GetProductReque
 		msg := "Error: Product Catalog Fail Feature Flag Enabled"
 		span.SetStatus(otelcodes.Error, msg)
 		span.AddEvent(msg)
+		logger.LogAttrs(
+			ctx,
+			slog.LevelError, fmt.Sprintf("Product Id Lookup Failed: %s", req.Id),
+			slog.String("error", "ProductCatalogService Fail Feature Flag Enabled"),
+		)
 		return nil, status.Error(codes.Internal, msg)
 	}
 
@@ -406,6 +411,7 @@ func (p *productCatalog) GetProduct(ctx context.Context, req *pb.GetProductReque
 		msg := fmt.Sprintf("Product Not Found: %s", req.Id)
 		span.SetStatus(otelcodes.Error, msg)
 		span.AddEvent(msg)
+		logger.ErrorContext(ctx, "Product Not Found")
 		return nil, status.Error(codes.NotFound, msg)
 	}
 
