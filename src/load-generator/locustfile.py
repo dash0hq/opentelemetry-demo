@@ -9,6 +9,7 @@ import random
 import time
 import uuid
 import weakref
+from contextlib import asynccontextmanager
 import logging
 
 from locust import HttpUser, task, between
@@ -306,6 +307,31 @@ async def browse_idle(page, min_ms, max_ms):
         if remaining_ms > 0:
             await page.wait_for_timeout(min(random.randint(800, 2500), remaining_ms))
 
+MIN_SESSION_SECONDS = 10
+
+@asynccontextmanager
+async def min_session_length(page):
+    """Keeps the web session alive for at least MIN_SESSION_SECONDS after the first page load, then leaves the
+    page so the SDK sends its buffered spans and replay chunks. Closing the browser context directly fires no
+    pagehide, so whatever the SDK has not sent yet is lost and the session shows up with a length of 0."""
+    first_load = []
+    page.once("domcontentloaded", lambda _: first_load.append(time.monotonic()))
+    try:
+        yield
+    finally:
+        try:
+            if first_load:
+                remaining_ms = int((first_load[0] + MIN_SESSION_SECONDS - time.monotonic()) * 1000)
+                if remaining_ms > 0:
+                    await browse_idle(page, remaining_ms, remaining_ms)
+                # Ends the session with an event, as browse_idle does not always move the cursor
+                await move_mouse(page, random.uniform(50, VIEWPORT_WIDTH - 50), random.uniform(50, VIEWPORT_HEIGHT - 50))
+                for tab in page.context.pages:
+                    await tab.goto("about:blank")
+                await page.wait_for_timeout(1000)  # giving the keepalive requests time to complete
+        except Exception:
+            pass
+
 browser_traffic_enabled = os.environ.get("LOCUST_BROWSER_TRAFFIC_ENABLED", "").lower() in ("true", "yes", "on")
 
 if browser_traffic_enabled:
@@ -322,10 +348,10 @@ if browser_traffic_enabled:
                     page.on("console", lambda msg: print(msg.text))
                     await page.route('**/*', add_baggage_header)
                     await seed_person(page)
-                    await page.goto("/cart", wait_until="domcontentloaded")
-                    await move_to(page, '[name="currency_code"]')
-                    await page.select_option('[name="currency_code"]', 'CHF')
-                    await page.wait_for_timeout(2000)  # giving the browser time to export the traces
+                    async with min_session_length(page):
+                        await page.goto("/cart", wait_until="domcontentloaded")
+                        await move_to(page, '[name="currency_code"]')
+                        await page.select_option('[name="currency_code"]', 'CHF')
                     logging.info("Currency changed to CHF")
                 except Exception as e:
                     logging.error(f"Error in change currency task: {str(e)}")
@@ -339,18 +365,18 @@ if browser_traffic_enabled:
                     page.on("console", lambda msg: print(msg.text))
                     await page.route('**/*', add_baggage_header)
                     await seed_person(page)
-                    # Wait for Roof Binoculars image to load (awaiting successful XHR response in less than 15 seconds)
-                    async with page.expect_event(
-                        "response",
-                        predicate=lambda r: '/images/products/RoofBinoculars.jpg' in r.url and r.status == 200,
-                        timeout=15000
-                    ):
-                        await page.goto("/", wait_until="domcontentloaded")
-                    await human_click(page, 'p:has-text("Roof Binoculars")')
-                    await page.wait_for_load_state("domcontentloaded")
-                    await human_click(page, 'button:has-text("Add To Cart")')
-                    await page.wait_for_load_state("domcontentloaded")
-                    await page.wait_for_timeout(2000)  # giving the browser time to export the traces
+                    async with min_session_length(page):
+                        # Wait for Roof Binoculars image to load (awaiting successful XHR response in less than 15 seconds)
+                        async with page.expect_event(
+                            "response",
+                            predicate=lambda r: '/images/products/RoofBinoculars.jpg' in r.url and r.status == 200,
+                            timeout=15000
+                        ):
+                            await page.goto("/", wait_until="domcontentloaded")
+                        await human_click(page, 'p:has-text("Roof Binoculars")')
+                        await page.wait_for_load_state("domcontentloaded")
+                        await human_click(page, 'button:has-text("Add To Cart")')
+                        await page.wait_for_load_state("domcontentloaded")
                     logging.info("Product added to cart successfully")
                 except Exception as e:
                     logging.error(f"Error in add to cart task: {str(e)}")
@@ -364,48 +390,49 @@ if browser_traffic_enabled:
                     page.on("console", lambda msg: print(msg.text))
                     await page.route('**/*', add_baggage_header)
                     await seed_person(page)
+                    async with min_session_length(page):
+                        async with event(self, 'View shop'):
+                            await page.goto("/", wait_until="domcontentloaded")
+                            await browse_idle(page, 2000, 15000)  # emulating user
 
-                    async with event(self, 'View shop'):
-                        await page.goto("/", wait_until="domcontentloaded")
-                        await browse_idle(page, 2000, 15000)  # emulating user
+                        async with event(self, 'Browse products'):
+                            await human_click(page, ":nth-match([data-cy=product-card], " + str(random.randint(1, 4)) + ")", button="middle")
+                            await browse_idle(page, 2000, 15000)
+                            tab1 = await self.browser_context.new_page()
+                            await tab1.route('**/*', add_baggage_header)
+                            await tab1.goto("/product/" + random.choice(products), wait_until="domcontentloaded")
+                            await browse_idle(page, 2000, 15000)
+                            await human_click(page, ":nth-match([data-cy=product-card], " + str(random.randint(1, 4)) + ")")
+                            tab2 = await self.browser_context.new_page()
+                            await tab2.route('**/*', add_baggage_header)
+                            await tab2.goto("/product/" + random.choice(products), wait_until="domcontentloaded")
+                            await browse_idle(page, 2000, 15000)
 
-                    async with event(self, 'Browse products'):
-                        await human_click(page, ":nth-match([data-cy=product-card], " + str(random.randint(1, 4)) + ")", button="middle")
-                        await browse_idle(page, 2000, 15000)
-                        tab1 = await self.browser_context.new_page()
-                        await tab1.route('**/*', add_baggage_header)
-                        await tab1.goto("/product/" + random.choice(products), wait_until="domcontentloaded")
-                        await browse_idle(page, 2000, 15000)
-                        await human_click(page, ":nth-match([data-cy=product-card], " + str(random.randint(1, 4)) + ")")
-                        tab2 = await self.browser_context.new_page()
-                        await tab2.route('**/*', add_baggage_header)
-                        await tab2.goto("/product/" + random.choice(products), wait_until="domcontentloaded")
-                        await browse_idle(page, 2000, 15000)
+                        if random.randint(0, 12) == 0:  # change currency with a chance of 1:12
+                            await move_to(page, '[name="currency_code"]')
+                            await page.select_option('[name="currency_code"]', 'CHF')
 
-                    if random.randint(0, 12) == 0:  # change currency with a chance of 1:12
-                        await move_to(page, '[name="currency_code"]')
-                        await page.select_option('[name="currency_code"]', 'CHF')
+                        async with event(self, 'Choose product'):
+                            await page.goto("/", wait_until="domcontentloaded")
+                            await browse_idle(page, 2000, 15000)
+                            await human_click(page, 'p:has-text("Roof Binoculars")')
+                            await browse_idle(page, 2000, 15000)
+                            await human_click(page, 'button:has-text("Add To Cart")')
+                            await browse_idle(page, 2000, 15000)
 
-                    async with event(self, 'Choose product'):
-                        await page.goto("/", wait_until="domcontentloaded")
-                        await browse_idle(page, 2000, 15000)
-                        await human_click(page, 'p:has-text("Roof Binoculars")')
-                        await browse_idle(page, 2000, 15000)
-                        await human_click(page, 'button:has-text("Add To Cart")')
-                        await browse_idle(page, 2000, 15000)
+                        async with event(self, 'View cart'):
+                            await page.goto("/cart", wait_until="domcontentloaded")
+                            await browse_idle(page, 2000, 15000)  # giving the browser time to export the traces
 
-                    async with event(self, 'View cart'):
-                        await page.goto("/cart", wait_until="domcontentloaded")
-                        await browse_idle(page, 2000, 15000)  # giving the browser time to export the traces
+                        if random.randint(0, 8) == 0:  # open an unknown product page with a chance of 1:8
+                            await page.goto("/product/ZFYYMZ29E6", wait_until="domcontentloaded")
 
-                    if random.randint(0, 8) == 0:  # open an unknown product page with a chance of 1:8
-                        await page.goto("/product/ZFYYMZ29E6", wait_until="domcontentloaded")
-
-                    if random.randint(0, 5) == 0:  # check out with a chance of 1:5
-                        await human_click(page, 'a[data-cy="cart-icon"]')
-                        await human_click(page, 'button:has-text("Go to Shopping Cart")')
-                        await browse_idle(page, 2000, 15000)
-                        await human_click(page, 'button:has-text("Place Order")')
+                        if random.randint(0, 5) == 0:  # check out with a chance of 1:5
+                            await human_click(page, 'a[data-cy="cart-icon"]')
+                            await human_click(page, 'button:has-text("Go to Shopping Cart")')
+                            await browse_idle(page, 2000, 15000)
+                            await human_click(page, 'button:has-text("Place Order")')
+                            await browse_idle(page, 2000, 5000)
                     logging.info("Browse shop task completed")
                 except Exception as e:
                     logging.error(f"Error in browse shop task: {str(e)}")
