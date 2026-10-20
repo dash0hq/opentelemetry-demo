@@ -65,6 +65,7 @@ class RecommendationService(demo_pb2_grpc.RecommendationServiceServicer):
 
 
 def get_product_list(request_product_ids):
+    logger.debug("get_product_list: start")
     global first_run
     global cached_ids
     with tracer.start_as_current_span("get_product_list") as span:
@@ -75,7 +76,9 @@ def get_product_list(request_product_ids):
         request_product_ids = request_product_ids_str.split(',')
 
         # Feature flag scenario - Cache Leak
+        logger.debug("get_product_list: checking recommendationCacheFailure feature flag")
         if check_feature_flag("recommendationCacheFailure"):
+            logger.debug("get_product_list: recommendationCacheFailure feature flag is enabled")
             span.set_attribute("demo.feature_flag.recommendation_cache", True)
             if random.random() < 0.5 or first_run:
                 first_run = False
@@ -91,6 +94,7 @@ def get_product_list(request_product_ids):
                 logger.info("get_product_list: cache hit")
                 product_ids = cached_ids
         else:
+            logger.debug("get_product_list: recommendationCacheFailure feature flag is not enabled")
             span.set_attribute("demo.feature_flag.recommendation_cache", False)
             cat_response = product_catalog_stub.ListProducts(demo_pb2.Empty())
             product_ids = [x.id for x in cat_response.products]
@@ -110,6 +114,7 @@ def get_product_list(request_product_ids):
 
         span.set_attribute("demo.product.filtered.list", prod_list)
 
+        logger.debug("get_product_list: done")
         return prod_list
 
 
@@ -148,6 +153,7 @@ if __name__ == "__main__":
     # Attach OTLP handler to logger
     logger = logging.getLogger('main')
     logger.addHandler(handler)
+    logger.setLevel(logging.DEBUG)
 
     catalog_addr = must_map_env('PRODUCT_CATALOG_ADDR')
     pc_channel = grpc.insecure_channel(catalog_addr)

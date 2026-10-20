@@ -177,6 +177,7 @@ public final class AdService {
      */
     @Override
     public void getAds(AdRequest req, StreamObserver<AdResponse> responseObserver) {
+      logger.debug("received getAds request");
       AdService service = AdService.getInstance();
 
       // get the current span in context
@@ -234,6 +235,7 @@ public final class AdService {
             Attributes.of(
                 adRequestTypeKey, adRequestType.name(), adResponseTypeKey, adResponseType.name()));
 
+        logger.debug("checking adFailure feature flag");
         // The feature flag value is the probability (0 to 1) to simulate a failure
         if (random.nextDouble() < ffClient.getDoubleValue(AD_FAILURE, 0.0, evaluationContext)) {
           throw new StatusRuntimeException(Status.UNAVAILABLE);
@@ -248,6 +250,7 @@ public final class AdService {
         AdResponse reply = AdResponse.newBuilder().addAllAds(allAds).build();
         responseObserver.onNext(reply);
         responseObserver.onCompleted();
+        logger.debug("getAds request completed");
       } catch (StatusRuntimeException e) {
         span.addEvent(
             "Error", Attributes.of(AttributeKey.stringKey("exception.message"), e.getMessage()));
