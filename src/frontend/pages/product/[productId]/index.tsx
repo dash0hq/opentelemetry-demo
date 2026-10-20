@@ -20,6 +20,7 @@ import { useCart } from '../../../providers/Cart.provider';
 import * as S from '../../../styles/ProductDetail.styled';
 import { useCurrency } from '../../../providers/Currency.provider';
 import { sendEvent } from '@dash0/sdk-web';
+import { assetUrl } from '../../../utils/assetUrl';
 
 const quantityOptions = new Array(10).fill(0).map((_, i) => i + 1);
 
@@ -78,7 +79,7 @@ const ProductDetail: NextPage = () => {
           <S.Container>
             {picture ? (
               <S.Image
-                $src={`/images/products/${picture}`}
+                $src={assetUrl(`/images/products/${picture}`)}
                 data-cy={CypressFields.ProductPicture}
               />
             ) : null}
@@ -101,7 +102,7 @@ const ProductDetail: NextPage = () => {
                 ))}
               </Select>
               <S.AddToCart data-cy={CypressFields.ProductAddToCart} onClick={onAddItem}>
-                <Image src="/icons/Cart.svg" height="15" width="15" alt="cart" /> Add To Cart
+                <Image src={assetUrl("/icons/Cart.svg")} unoptimized height="15" width="15" alt="cart" /> Add To Cart
               </S.AddToCart>
             </S.Details>
           </S.Container>

@@ -22,6 +22,7 @@ COPY ./src/frontend/types/ types/
 COPY ./src/frontend/utils/enums/ utils/enums/
 COPY ./src/frontend/utils/telemetry/ utils/telemetry/
 COPY ./src/frontend/utils/faker/ utils/faker/
+COPY ./src/frontend/utils/assetUrl.ts utils/assetUrl.ts
 COPY ./src/frontend/utils/imageLoader.js utils/imageLoader.js
 COPY ./src/frontend/utils/Request.ts utils/Request.ts
 
@@ -55,6 +56,10 @@ COPY --from=deps /app/node_modules/ node_modules/
 COPY ./src/frontend/public/ public/
 
 COPY ./src/frontend/utils/telemetry/Instrumentation.js Instrumentation.js
+
+# Set by release builds; serves images from a public URL pinned to the release tag (see utils/assetUrl.ts).
+ARG DEMO_RELEASE_VERSION=""
+ENV DEMO_RELEASE_VERSION=${DEMO_RELEASE_VERSION}
 
 ARG FRONTEND_PORT=8080
 EXPOSE ${FRONTEND_PORT}

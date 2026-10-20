@@ -6,6 +6,7 @@ import { Product } from '../../protos/demo';
 import ProductPrice from '../ProductPrice';
 import Select from '../Select';
 import * as S from './CartItems.styled';
+import { assetUrl } from '../../utils/assetUrl';
 
 const quantityOptions = new Array(10).fill(0).map((_, i) => i + 1);
 
@@ -31,7 +32,7 @@ const CartItem = ({
     <S.CartItem>
       <Link href={`/product/${id}`}>
         <S.NameContainer>
-          <S.CartItemImage alt={name} src={picture ? "/images/products/" + picture : undefined} />
+          <S.CartItemImage alt={name} src={picture ? assetUrl("/images/products/" + picture) : undefined} />
           <p>{name}</p>
         </S.NameContainer>
       </Link>

@@ -3,6 +3,7 @@
 
 import styled from 'styled-components';
 import Button from '../Button';
+import { assetUrl } from '../../utils/assetUrl';
 
 export const Banner = styled.div`
   display: flex;
@@ -15,9 +16,9 @@ export const Banner = styled.div`
   }
 `;
 
-export const BannerImg = styled.img.attrs({
-  src: '/images/Banner.png',
-})`
+export const BannerImg = styled.img.attrs(() => ({
+  src: assetUrl('/images/Banner.png'),
+}))`
   width: 100%;
   height: auto;
 `;

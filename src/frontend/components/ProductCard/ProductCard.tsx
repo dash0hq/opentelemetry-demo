@@ -7,6 +7,7 @@ import ProductPrice from '../ProductPrice';
 import * as S from './ProductCard.styled';
 import { useState, useEffect } from 'react';
 import { useNumberFlagValue } from '@openfeature/react-sdk';
+import { assetUrl } from '../../utils/assetUrl';
 
 interface IProps {
   product: Product;
@@ -53,6 +54,12 @@ const ProductCard = ({
     getImageWithHeaders(requestInfo)
       .then(blob => {
         if (cancelled) return;
+        // Session replays cannot load blob URLs, so show the public URL when there is one
+        const publicUrl = assetUrl(imageUrl);
+        if (publicUrl !== imageUrl) {
+          setImageSrc(publicUrl);
+          return;
+        }
         objectUrl = URL.createObjectURL(blob);
         setImageSrc(objectUrl);
       })

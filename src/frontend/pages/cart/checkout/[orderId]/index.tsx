@@ -15,6 +15,7 @@ import AdProvider from '../../../../providers/Ad.provider';
 import { Money } from '../../../../protos/demo';
 import * as S from '../../../../styles/Checkout.styled';
 import { IProductCheckout } from '../../../../types/Cart';
+import { assetUrl } from '../../../../utils/assetUrl';
 
 const Checkout: NextPage = () => {
   const { query } = useRouter();
@@ -82,7 +83,7 @@ const Checkout: NextPage = () => {
 
                   return (
                     <S.OrderItem key={item.productId}>
-                      <S.ItemImage src={"/images/products/" + item.product.picture} alt={item.product.name}/>
+                      <S.ItemImage src={assetUrl("/images/products/" + item.product.picture)} alt={item.product.name}/>
                       <S.ItemDetails>
                         <S.ItemName>{item.product.name}</S.ItemName>
                         <S.ItemQuantity>Quantity: {item.quantity}</S.ItemQuantity>
