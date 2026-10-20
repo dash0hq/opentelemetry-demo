@@ -29,22 +29,22 @@ var client = openfeature.NewDefaultClient()
 // ProductCatalogFailure returns the value of the "productCatalogFailure" feature flag.
 // simulates a potential product catalog failure scenario
 //
-// The flag is a type of boolean and defaults to false.
+// The flag is a type of float and defaults to 0.
 var ProductCatalogFailure = struct {
 	fmt.Stringer
 	// Value returns the value of the [ProductCatalogFailure] flag.
-	Value evaluationValue[bool]
+	Value evaluationValue[float64]
 
 	// ValueWithDetails returns the evaluation details of the [ProductCatalogFailure] flag
 	// and the evaluation error, if any.
-	ValueWithDetails evaluationDetails[bool]
+	ValueWithDetails evaluationDetails[float64]
 }{
 	Stringer: stringer("productCatalogFailure"),
-	Value: func(ctx context.Context, evalCtx openfeature.EvaluationContext) bool {
-		return client.Boolean(ctx, "productCatalogFailure", false, evalCtx)
+	Value: func(ctx context.Context, evalCtx openfeature.EvaluationContext) float64 {
+		return client.Float(ctx, "productCatalogFailure", 0, evalCtx)
 	},
-	ValueWithDetails: func(ctx context.Context, evalCtx openfeature.EvaluationContext) (openfeature.GenericEvaluationDetails[bool], error) {
-		return client.BooleanValueDetails(ctx, "productCatalogFailure", false, evalCtx)
+	ValueWithDetails: func(ctx context.Context, evalCtx openfeature.EvaluationContext) (openfeature.GenericEvaluationDetails[float64], error) {
+		return client.FloatValueDetails(ctx, "productCatalogFailure", 0, evalCtx)
 	},
 }
 

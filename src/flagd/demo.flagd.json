@@ -3,11 +3,17 @@
   "flags": {
     "adFailure": {
       "defaultVariant": "off",
-      "description": "Fail ad service",
+      "description": "Fail ad service requests n% of the time",
       "state": "ENABLED",
       "variants": {
-        "off": false,
-        "on": true
+        "10%": 0.1,
+        "100%": 1,
+        "25%": 0.25,
+        "30%": 0.3,
+        "50%": 0.5,
+        "75%": 0.75,
+        "off": 0,
+        "on": 1
       }
     },
     "adHighCpu": {
@@ -158,7 +164,7 @@
     },
     "productCatalogFailure": {
       "defaultVariant": "off",
-      "description": "Fail product catalog service on a specific product",
+      "description": "Fail product catalog service on a specific product n% of the time",
       "state": "ENABLED",
       "targeting": {
         "if": [
@@ -175,8 +181,13 @@
         ]
       },
       "variants": {
-        "off": false,
-        "on": true
+        "10%": 0.1,
+        "100%": 1,
+        "25%": 0.25,
+        "50%": 0.5,
+        "75%": 0.75,
+        "off": 0,
+        "on": 1
       }
     },
     "productCatalogLockContention": {
@@ -190,11 +201,16 @@
     },
     "recommendationCacheFailure": {
       "defaultVariant": "off",
-      "description": "Fail recommendation service cache",
+      "description": "Fail recommendation service cache n% of the time",
       "state": "ENABLED",
       "variants": {
-        "off": false,
-        "on": true
+        "10%": 0.1,
+        "100%": 1,
+        "25%": 0.25,
+        "50%": 0.5,
+        "75%": 0.75,
+        "off": 0,
+        "on": 1
       }
     }
   }

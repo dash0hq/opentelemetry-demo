@@ -121,9 +121,9 @@ def must_map_env(key: str):
 
 
 def check_feature_flag(flag_name: str):
-    # Initialize OpenFeature
+    # The flag value is the probability (0 to 1) that the flag is active for this request
     client = api.get_client()
-    return client.get_boolean_value(flag_name, False)
+    return random.random() < client.get_float_value(flag_name, 0.0)
 
 
 if __name__ == "__main__":

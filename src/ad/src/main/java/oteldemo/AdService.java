@@ -234,8 +234,8 @@ public final class AdService {
             Attributes.of(
                 adRequestTypeKey, adRequestType.name(), adResponseTypeKey, adResponseType.name()));
 
-        // Throw 1/10 of the time to simulate a failure when the feature flag is enabled
-        if (ffClient.getBooleanValue(AD_FAILURE, false, evaluationContext) && random.nextInt(10) == 0) {
+        // The feature flag value is the probability (0 to 1) to simulate a failure
+        if (random.nextDouble() < ffClient.getDoubleValue(AD_FAILURE, 0.0, evaluationContext)) {
           throw new StatusRuntimeException(Status.UNAVAILABLE);
         }
 
