@@ -1,6 +1,6 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
-name: "Build and Publish"
+name: "Publish Images & Deploy"
 
 on:
   release:
@@ -13,13 +13,46 @@ jobs:
   build_and_push_images:
     permissions:  # required by the reusable workflow
       contents: read  # required by the component-build-images reusable workflow
-      packages: write  # required to push built images to GHCR
+      id-token: write  # required by the component-build-images reusable workflow
     uses: $/.github/workflows/component-build-images.yml
-    if: ${{ !github.event.repository.fork }}
     with:
       push: true
       force_build: true
       version: ${{ github.event.release.tag_name }}
-    secrets:
-      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+
+  deploy_release:
+    name: deploy to https://otel-demo.eu-west-1.aws.dash0-demo.com/
+    needs:
+      - build_and_push_images
+    runs-on: ubuntu-latest
+    # do not run multiple deployment jobs concurrently
+    concurrency: deploy
+    steps:
+      - name: checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: deploy release
+        uses: ./.github/actions/deploy-demo
+        with:
+          token: ${{ secrets.REPOSITORY_FULL_ACCESS_GITHUB_TOKEN }}
+          containerImageVersion: ${{ github.event.release.tag_name }}
+
+  update-release-in-env-file:
+    name: update .env file
+    needs:
+      - deploy_release
+    runs-on: ubuntu-latest
+    concurrency: update-env-file
+    steps:
+      - name: checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: update .env file
+        uses: ./.github/actions/update-env-file
+        with:
+          containerImageVersion: ${{ github.event.release.tag_name }}
+          token: ${{ secrets.REPOSITORY_FULL_ACCESS_GITHUB_TOKEN }}
