@@ -153,6 +153,37 @@
         "off": 0
       }
     },
+    "paymentServiceSimulateSlowness": {
+      "defaultVariant": "off",
+      "description": "Delay payment service requests n% of the time, by a random time between paymentServiceSimulateSlownessLowerBound and paymentServiceSimulateSlownessUpperBound",
+      "state": "ENABLED",
+      "variants": {
+        "10%": 0.1,
+        "100%": 1,
+        "25%": 0.25,
+        "50%": 0.5,
+        "75%": 0.75,
+        "off": 0
+      }
+    },
+    "paymentServiceSimulateSlownessLowerBound": {
+      "defaultVariant": "default",
+      "description": "Minimum simulated delay in milliseconds in the payment service, if paymentServiceSimulateSlowness is on",
+      "state": "ENABLED",
+      "variants": {
+        "1sec": 1000,
+        "default": 200
+      }
+    },
+    "paymentServiceSimulateSlownessUpperBound": {
+      "defaultVariant": "default",
+      "description": "Maximum simulated delay in milliseconds in the payment service, if paymentServiceSimulateSlowness is on",
+      "state": "ENABLED",
+      "variants": {
+        "2sec": 2000,
+        "default": 600
+      }
+    },
     "paymentUnreachable": {
       "defaultVariant": "off",
       "description": "Payment service is unavailable",

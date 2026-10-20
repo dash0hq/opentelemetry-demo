@@ -24,6 +24,21 @@ function random(arr) {
   return arr[index];
 }
 
+/** Wait a random time between the lower and upper bound flags, with the probability set by the main flag. */
+async function simulateSlowness(span) {
+  const client = OpenFeature.getClient();
+  const probability = await client.getNumberValue('paymentServiceSimulateSlowness', 0);
+  if (Math.random() >= probability) {
+    return;
+  }
+  const lowerBound = await client.getNumberValue('paymentServiceSimulateSlownessLowerBound', 0);
+  const upperBound = await client.getNumberValue('paymentServiceSimulateSlownessUpperBound', 1000);
+  const delayMillis = lowerBound + Math.floor(Math.random() * Math.max(0, upperBound - lowerBound));
+  logger.info({ delayMillis }, 'Simulating payment service slowness.');
+  span.setAttribute('demo.payment.simulated_delay_ms', delayMillis);
+  await new Promise(resolve => setTimeout(resolve, delayMillis));
+}
+
 module.exports.charge = async request => {
   const span = tracer.startSpan('charge');
 
@@ -39,6 +54,8 @@ module.exports.charge = async request => {
 
     const numberVariant = await OpenFeature.getClient().getNumberValue("paymentFailure", 0);
     const emitRawPii = await OpenFeature.getClient().getBooleanValue("emitRawPii", false);
+
+    await simulateSlowness(span);
 
     if (numberVariant > 0) {
       // n% chance to fail with demo.user_context.loyalty_level=gold
