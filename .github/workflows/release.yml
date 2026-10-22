@@ -24,6 +24,8 @@ jobs:
     name: deploy to https://otel-demo.eu-west-1.aws.dash0-demo.com/
     needs:
       - build_and_push_images
+    # Pre-releases only publish images. This also skips the .env update, which needs this job.
+    if: ${{ !github.event.release.prerelease }}
     runs-on: ubuntu-latest
     # do not run multiple deployment jobs concurrently
     concurrency: deploy
