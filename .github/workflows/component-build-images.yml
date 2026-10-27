@@ -254,7 +254,7 @@ jobs:
       # The github-ci-cd-ecr role only trusts refs/heads/main and refs/tags/*,
       # so only log in to the registries when the images are pushed.
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: arn:aws:iam::718306648796:role/github-ci-cd-ecr
           aws-region: us-west-2
@@ -267,7 +267,7 @@ jobs:
         if: ${{ steps.check_changes.outputs.skip == 'false' && inputs.push }}
       - name: Authenticate with Google Cloud
         id: login-gcp
-        uses: google-github-actions/auth@71f986410dfbc7added4569d411d040a91dc6935  # v2.1.8
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093  # v3.0.0
         with:
           token_format: access_token
           workload_identity_provider: projects/586092074842/locations/global/workloadIdentityPools/github-action/providers/github-identity-provider
