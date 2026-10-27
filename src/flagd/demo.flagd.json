@@ -169,6 +169,9 @@
     "paymentServiceSimulateSlownessLowerBound": {
       "defaultVariant": "default",
       "description": "Minimum simulated delay in milliseconds in the payment service, if paymentServiceSimulateSlowness is on",
+      "metadata": {
+        "schedulable": false
+      },
       "state": "ENABLED",
       "variants": {
         "1sec": 1000,
@@ -178,6 +181,9 @@
     "paymentServiceSimulateSlownessUpperBound": {
       "defaultVariant": "default",
       "description": "Maximum simulated delay in milliseconds in the payment service, if paymentServiceSimulateSlowness is on",
+      "metadata": {
+        "schedulable": false
+      },
       "state": "ENABLED",
       "variants": {
         "2sec": 2000,
@@ -260,6 +266,9 @@
     "shippingServiceSimulateSlownessLowerBound": {
       "defaultVariant": "default",
       "description": "Minimum simulated delay in milliseconds in the shipping service, if shippingServiceSimulateSlowness is on",
+      "metadata": {
+        "schedulable": false
+      },
       "state": "ENABLED",
       "variants": {
         "1sec": 1000,
@@ -269,6 +278,9 @@
     "shippingServiceSimulateSlownessUpperBound": {
       "defaultVariant": "default",
       "description": "Maximum simulated delay in milliseconds in the shipping service, if shippingServiceSimulateSlowness is on",
+      "metadata": {
+        "schedulable": false
+      },
       "state": "ENABLED",
       "variants": {
         "2sec": 2000,

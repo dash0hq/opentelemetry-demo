@@ -68,7 +68,7 @@ defmodule FlagdUi.SchedulerTest do
     test "offers every failure flag with its non-off variants" do
       flags = Storage |> GenServer.call(:read) |> Scheduler.schedulable_flags()
 
-      assert {"adFailure", ["on"]} in flags
+      assert {"adFailure", ["10%", "100%", "25%", "30%", "50%", "75%", "on"]} in flags
       assert {"imageSlowLoad", ["10sec", "5sec"]} in flags
 
       assert {"cartFailure", ["10%", "100%", "25%", "50%", "75%", "90%"]} in flags

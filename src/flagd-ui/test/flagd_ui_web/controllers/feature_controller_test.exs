@@ -19,9 +19,9 @@ defmodule FlagdUiWeb.FeatureControllerTest do
              "flags" => %{
                "adFailure" => %{
                  "defaultVariant" => "off",
-                 "description" => "Fail ad service",
+                 "description" => "Fail ad service requests n% of the time",
                  "state" => "ENABLED",
-                 "variants" => %{"off" => false, "on" => true}
+                 "variants" => %{"off" => 0, "on" => 1}
                },
                "adHighCpu" => %{
                  "defaultVariant" => "off",
@@ -40,9 +40,9 @@ defmodule FlagdUiWeb.FeatureControllerTest do
              "flags" => %{
                "adFailure" => %{
                  "defaultVariant" => "off",
-                 "description" => "Fail ad service",
+                 "description" => "Fail ad service requests n% of the time",
                  "state" => "ENABLED",
-                 "variants" => %{"off" => false, "on" => true}
+                 "variants" => %{"off" => 0, "on" => 1}
                },
                "adHighCpu" => %{
                  "defaultVariant" => "off",
