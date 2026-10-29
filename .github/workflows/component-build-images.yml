@@ -264,7 +264,8 @@ jobs:
           token_format: access_token
           workload_identity_provider: projects/586092074842/locations/global/workloadIdentityPools/github-action/providers/github-identity-provider
           service_account: github-action-service-account@dash0-deployment.iam.gserviceaccount.com
-          access_token_lifetime: 1800s
+          # The multi-arch currency build takes more than 30 minutes before it pushes
+          access_token_lifetime: 3600s
         if: ${{ steps.check_changes.outputs.skip == 'false' && inputs.push }}
       - name: Log in to GCP EU Artifact Registry
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f  # v4.6.0
