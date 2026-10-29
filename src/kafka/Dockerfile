@@ -2,17 +2,15 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-FROM confluentinc/cp-kafka:7.5.2
+FROM apache/kafka:4.3.1@sha256:77e3df9054047a88b520d0cc46e16696d3b22022e1d580aeccd2632df6532837
 
 USER root
-ARG version=2.0.0
-ADD https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v$version/opentelemetry-javaagent.jar /tmp/opentelemetry-javaagent.jar
-RUN chmod go+r /tmp/opentelemetry-javaagent.jar
+ARG OTEL_JAVA_AGENT_VERSION
 
 USER appuser
 
-ENV KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
-ENV KAFKA_CONTROLLER_QUORUM_VOTERS='1@0.0.0.0:9093'
+ADD --chown=appuser:appuser https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v$OTEL_JAVA_AGENT_VERSION/opentelemetry-javaagent.jar /tmp/opentelemetry-javaagent.jar
+
 ENV KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
 ENV KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
 ENV KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS=0

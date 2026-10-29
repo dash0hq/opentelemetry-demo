@@ -6,26 +6,34 @@ on:
   release:
     types: [published]
 
+permissions:
+  contents: read
+
 jobs:
   build_and_push_images:
-    uses: ./.github/workflows/build-images.yml
+    permissions:  # required by the reusable workflow
+      contents: read  # required by the component-build-images reusable workflow
+      id-token: write  # required by the component-build-images reusable workflow
+    uses: $/.github/workflows/component-build-images.yml
     with:
       push: true
+      force_build: true
       version: ${{ github.event.release.tag_name }}
-    secrets: inherit
 
   deploy_release:
     name: deploy to https://otel-demo.eu-west-1.aws.dash0-demo.com/
     needs:
       - build_and_push_images
+    # Pre-releases only publish images. This also skips the .env update, which needs this job.
+    if: ${{ !github.event.release.prerelease }}
     runs-on: ubuntu-latest
     # do not run multiple deployment jobs concurrently
     concurrency: deploy
     steps:
       - name: checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
-          fetch-depth: 0
+          persist-credentials: false
 
       - name: deploy release
         uses: ./.github/actions/deploy-demo
@@ -41,9 +49,9 @@ jobs:
     concurrency: update-env-file
     steps:
       - name: checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
-          fetch-depth: 0
+          persist-credentials: false
 
       - name: update .env file
         uses: ./.github/actions/update-env-file

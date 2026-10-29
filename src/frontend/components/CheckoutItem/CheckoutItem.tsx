@@ -3,7 +3,7 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
-import { CypressFields } from '../../utils/Cypress';
+import { CypressFields } from '../../utils/enums/CypressFields';
 import { Address } from '../../protos/demo';
 import { IProductCheckoutItem } from '../../types/Cart';
 import ProductPrice from '../ProductPrice';
@@ -30,7 +30,7 @@ const CheckoutItem = ({
   return (
     <S.CheckoutItem data-cy={CypressFields.CheckoutItem}>
       <S.ItemDetails>
-        <S.ItemImage src={assetUrl("/images/products/" + picture)} alt={name} />
+        {picture && <S.ItemImage src={assetUrl(`/images/products/${picture}`)} alt={name} />}
         <S.Details>
           <S.ItemName>{name}</S.ItemName>
           <p>Quantity: {quantity}</p>

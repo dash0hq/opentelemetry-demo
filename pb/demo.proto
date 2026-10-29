@@ -264,96 +264,48 @@ message Ad {
 // ------------Feature flag service------------------
 
 service FeatureFlagService {
-
-  /* Returns the raw value of the feature flag. If no flag with that name exists, the response will have the value 0. */
-  rpc GetFeatureFlagValue(GetFeatureFlagValueRequest) returns (GetFeatureFlagValueResponse) {}
-
-  /*
-   * A convenience function to evaluate a feature flag that represents a probability, that is, a flag with a value between 0 and 1
-   * Returns the random decision as a boolean value. Services that use probability based feature flags can use this method instead
-   * of implementing the random decision taking on their own. If no flag with that name exists, the response will have the
-   * value false.
-   */
-  rpc EvaluateProbabilityFeatureFlag(EvaluateProbabilityFeatureFlagRequest) returns (EvaluateProbabilityFeatureFlagResponse) {}
-
-  /*
-   * A convenience function to fetch a triplet of feature flag values that represent a range of values. For example, for
-   * simulating increased request latencies in a service, the triplet of feature flags to be created would be
-   * - serviceNameSimulateSlowness: on/off switch or probability for the feature (value is >= 0 & <= 1),
-   * - serviceNameSimulateSlownessLowerBound: the lower bound in milliseconds for the additional delay,
-   * - serviceNameSimulateSlownessUpperBound: the upper bound in milliseconds for the additional delay.
-   * That is, the feature flag API assumes that there are additional feature flag values with the suffix "LowerBound" and
-   * "UpperBound" when a range feature flag with a particular name is requested. In case the feature is enabled, but one or both
-   * of lower/upper bound does not exist, the arbitrary defaults for the lower and upper bound are 0 and 1000 respectively.
-   */
-  rpc GetRangeFeatureFlag(RangeFeatureFlagRequest) returns (RangeFeatureFlagResponse) {}
-
-  /* Creates a new feature flag. */
+  rpc GetFlag(GetFlagRequest) returns (GetFlagResponse) {}
   rpc CreateFlag(CreateFlagRequest) returns (CreateFlagResponse) {}
-
-  /* Updates the value of a feature flag. */
-  rpc UpdateFlagValue(UpdateFlagValueRequest) returns (UpdateFlagValueResponse) {}
-
-  /* Lists all feature flags with their descriptions and values. */
+  rpc UpdateFlag(UpdateFlagRequest) returns (UpdateFlagResponse) {}
   rpc ListFlags(ListFlagsRequest) returns (ListFlagsResponse) {}
-
-  /* Deletes an existing feature flag. */
   rpc DeleteFlag(DeleteFlagRequest) returns (DeleteFlagResponse) {}
 }
 
-message FlagDefinition {
+message Flag {
   string name = 1;
   string description = 2;
-  float value = 3;
+  bool enabled = 3;
 }
 
-message EvaluateProbabilityFeatureFlagRequest {
+message GetFlagRequest {
   string name = 1;
 }
 
-message EvaluateProbabilityFeatureFlagResponse {
-  bool enabled = 1;
-}
-
-message RangeFeatureFlagRequest {
-  string name = 1;
-  string nameLowerBound = 2;
-  string nameUpperBound = 3;
-}
-
-message RangeFeatureFlagResponse {
-  bool enabled = 1;
-  float lowerBound = 2;
-  float upperBound = 3;
-}
-
-message GetFeatureFlagValueRequest {
-  string name = 1;
-}
-
-message GetFeatureFlagValueResponse {
-  float value = 3;
+message GetFlagResponse {
+  Flag flag = 1;
 }
 
 message CreateFlagRequest {
   string name = 1;
   string description = 2;
-  float value = 3;
+  bool enabled = 3;
 }
 
-message CreateFlagResponse {}
+message CreateFlagResponse {
+  Flag flag = 1;
+}
 
-message UpdateFlagValueRequest {
+message UpdateFlagRequest {
   string name = 1;
-  float value = 2;
+  bool enabled = 2;
 }
 
-message UpdateFlagValueResponse {}
+message UpdateFlagResponse {}
 
 message ListFlagsRequest {}
 
 message ListFlagsResponse {
-  repeated FlagDefinition flag = 1;
+  repeated Flag flag = 1;
 }
 
 message DeleteFlagRequest {

@@ -22,11 +22,11 @@ What do you expect to see?
 
 **What is the actual behavior?**
 
-What did you see instead?
+Please describe the actual behavior experienced.
 
 ## Reproduce
 
-Provide the minimum required steps to result in the issue you're observing.
+Could you provide the minimum required steps to resolve the issue you're seeing?
 
 We will close this issue if:
 
@@ -35,4 +35,6 @@ We will close this issue if:
 
 ## Additional Context
 
-Add any other context about the problem here.
+Please feel free to add any other context about the problem here.
+
+<sub>**Tip**: [React](https://github.blog/news-insights/product-news/add-reactions-to-pull-requests-issues-and-comments/) with 👍 to help prioritize this issue. Please use comments to provide useful context, avoiding `+1` or `me too`, to help us triage it. Learn more [here](https://opentelemetry.io/community/end-user/issue-participation/).</sub>

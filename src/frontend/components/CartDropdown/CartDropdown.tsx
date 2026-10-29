@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { useEffect, useRef } from 'react';
-import { CypressFields } from '../../utils/Cypress';
+import { CypressFields } from '../../utils/enums/CypressFields';
 import { IProductCartItem } from '../../types/Cart';
 import ProductPrice from '../ProductPrice';
 import * as S from './CartDropdown.styled';
@@ -31,11 +31,11 @@ const CartDropdown = ({ productList, isOpen, onClose }: IProps) => {
       // Unbind the event listener on clean up
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [ref]);
+  }, [ref, onClose]);
 
   return isOpen ? (
     <S.CartDropdown ref={ref} data-cy={CypressFields.CartDropdown}>
-      <div>
+      <S.ContentWrapper>
         <S.Header>
           <S.Title>Shopping Cart</S.Title>
           <span onClick={onClose}>Close</span>
@@ -45,8 +45,8 @@ const CartDropdown = ({ productList, isOpen, onClose }: IProps) => {
           {productList.map(
             ({ quantity, product: { name, picture, id, priceUsd = { nanos: 0, currencyCode: 'USD', units: 0 } } }) => (
               <S.Item key={id} data-cy={CypressFields.CartDropdownItem}>
-                <S.ItemImage src={assetUrl("/images/products/" + picture)} alt={name} />
-                <S.ItemDetails>
+                {picture && <S.ItemImage src={assetUrl('/images/products/' + picture)} alt={name} />}
+                <S.ItemDetails $fullWidth={!picture}>
                   <S.ItemName>{name}</S.ItemName>
                   <ProductPrice price={priceUsd} />
                   <S.ItemQuantity>Quantity: {quantity}</S.ItemQuantity>
@@ -55,7 +55,7 @@ const CartDropdown = ({ productList, isOpen, onClose }: IProps) => {
             )
           )}
         </S.ItemList>
-      </div>
+      </S.ContentWrapper>
       <Link href="/cart">
         <S.CartButton data-cy={CypressFields.CartGoToShopping}>Go to Shopping Cart</S.CartButton>
       </Link>

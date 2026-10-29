@@ -1,9 +1,10 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import { CypressFields, getElementByField } from '../../utils/Cypress';
+import { getElementByField } from '../../utils/Cypress';
+import { CypressFields } from '../../utils/enums/CypressFields';
 
-describe.skip('Product Detail Page', () => {
+describe('Product Detail Page', () => {
   beforeEach(() => {
     cy.visit('/');
   });
@@ -30,6 +31,27 @@ describe.skip('Product Detail Page', () => {
       4
     );
     getElementByField(CypressFields.Ad).should('exist');
+  });
+
+  it('should not render product picture or request undefined image when picture is missing', () => {
+    cy.intercept('GET', '/api/products/*', req => {
+      req.continue(res => {
+        delete res.body.picture;
+      });
+    }).as('getProduct');
+
+    cy.intercept('GET', '/images/products/undefined').as('undefinedImage');
+
+    getElementByField(CypressFields.ProductCard).first().click();
+    cy.wait('@getProduct');
+
+    getElementByField(CypressFields.ProductDetail).should('exist');
+    getElementByField(CypressFields.ProductPicture).should('not.exist');
+    getElementByField(CypressFields.ProductName).should('exist');
+    getElementByField(CypressFields.ProductDescription).should('exist');
+    getElementByField(CypressFields.ProductAddToCart).should('exist');
+
+    cy.get('@undefinedImage.all').should('have.length', 0);
   });
 
   it('should add item to cart', () => {

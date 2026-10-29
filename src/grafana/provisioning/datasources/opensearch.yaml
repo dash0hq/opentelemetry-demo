@@ -5,16 +5,18 @@ apiVersion: 1
 
 datasources:
   - name: OpenSearch
+    uid: webstore-logs
     type: grafana-opensearch-datasource
     url: http://opensearch:9200/
     access: proxy
     editable: true
     isDefault: false
     jsonData:
-      database: otel
+      database: otel-logs-*
       flavor: opensearch
-      logLevelField: severity
+      logLevelField: severity.text.keyword
       logMessageField: body
       pplEnabled: true
       timeField: observedTimestamp
-      version: 2.11.1
+      # version must be in sync with src\opensearch\Dockerfile
+      version: 3.7.0

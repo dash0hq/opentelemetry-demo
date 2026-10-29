@@ -1,27 +1,31 @@
-
-
+# IDEs / local files
 *~
+.idea/
 *.iml
 *.ipr
 *.iws
 *.pyc
-.nb-gradle
-.nb-gradle-properties
 .swp
 .DS_Store
 \#*\#
-
-# Eclipse
 .classpath
 .project
 .settings
-
-bin/
-obj/
 .vs/
 .vscode
+
+# AI Agents
+.claude/
+.codex/
+.cursor/
+.cursorrules
+
+# Build artifacts
+bin/
+obj/
 .gradle/
-.idea/
+.nb-gradle
+.nb-gradle-properties
 build/
 node_modules/
 coverage
@@ -34,22 +38,23 @@ composer.lock
 .venv
 .dockerhub.env
 .ghcr.env
-.aws_ecr.env
+*.apk
+/.lycheecache
+
+# Ignore copied/generated protobuf files
+/src/accounting/src/protos/
+/src/cart/src/protos/
+/src/fraud-detection/src/main/proto
+/src/payment/demo.proto
+/src/shipping/proto/
+/src/currency/proto
+/src/frontend/pb
+
+# Otel Demo specific
+docker-compose.override.yml
 
 src/frontend/cypress/videos
 src/frontend/cypress/screenshots
-src/shippingservice/target/
-test/tracetesting/tracetesting-vars.yaml
+src/shipping/target/
 
-# Ignore copied/generated protobuf files
-/src/cartservice/src/protos/
-/src/featureflagservice/proto/
-/src/featureflagservice/src/ffs_demo_pb.erl
-/src/featureflagservice/src/ffs_service_*.erl
-/src/featureflagservice/src/oteldemo_*.erl
-/src/frauddetectionservice/src/main/proto
-/src/frontend/pb/
-/src/frontend/protos/
-/src/paymentservice/demo.proto
-/src/recommendationservice/demo_pb2*.py
-/src/shippingservice/proto/
+!src/currency/build

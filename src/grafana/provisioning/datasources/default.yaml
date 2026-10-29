@@ -12,6 +12,8 @@ datasources:
     editable: true
     isDefault: true
     jsonData:
+      # Align Prometheus data source time interval with the OTel SDKs' export interval (see OTEL_METRIC_EXPORT_INTERVAL)
+      timeInterval: "60s"
       exemplarTraceIdDestinations:
         - datasourceUid: webstore-traces
           name: trace_id
@@ -19,3 +21,7 @@ datasources:
         - url: http://localhost:8080/jaeger/ui/trace/$${__value.raw}
           name: trace_id
           urlDisplayLabel: View in Jaeger UI
+
+        - url: http://localhost:8080/grafana/d/W2gX2zHVk/demo-dashboard?orgId=1&var-service=All&var-traceId=$${__value.raw}
+          name: trace_id
+          urlDisplayLabel: View in Logs (OpenSearch)

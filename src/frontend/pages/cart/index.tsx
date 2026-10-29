@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { NextPage } from 'next';
-import Footer from '../../components/Footer';
+import Head from 'next/head';
 import Layout from '../../components/Layout';
 import Recommendations from '../../components/Recommendations';
 import * as S from '../../styles/Cart.styled';
@@ -21,12 +21,14 @@ const Cart: NextPage = () => {
       productIds={items.map(({ productId }) => productId)}
       contextKeys={[...new Set(items.flatMap(({ product }) => product.categories))]}
     >
+      <Head>
+        <title>Otel Demo - Cart</title>
+      </Head>
       <Layout>
         <S.Cart>
           {(!!items.length && <CartDetail />) || <EmptyCart />}
           <Recommendations />
         </S.Cart>
-        <Footer />
       </Layout>
     </AdProvider>
   );

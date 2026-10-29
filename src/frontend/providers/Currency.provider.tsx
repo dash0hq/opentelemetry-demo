@@ -30,7 +30,7 @@ export const useCurrency = () => useContext(Context);
 const CurrencyProvider = ({ children }: IProps) => {
   const { data: currencyCodeListUnsorted = [] } = useQuery({
     queryKey: ['currency'],
-    queryFn: ApiGateway.getSupportedCurrencyList,
+    queryFn: ApiGateway.getSupportedCurrencyList
   });
   const [selectedCurrency, setSelectedCurrency] = useState<string>('');
 
@@ -47,12 +47,12 @@ const CurrencyProvider = ({ children }: IProps) => {
   const currencyCodeList = currencyCodeListUnsorted.sort();
 
   const value = useMemo(
-    () => ({
-      currencyCodeList,
-      selectedCurrency,
-      setSelectedCurrency: onSelectCurrency,
-    }),
-    [currencyCodeList, selectedCurrency, onSelectCurrency]
+      () => ({
+        currencyCodeList,
+        selectedCurrency,
+        setSelectedCurrency: onSelectCurrency,
+      }),
+      [currencyCodeList, selectedCurrency, onSelectCurrency]
   );
 
   return <Context.Provider value={value}>{children}</Context.Provider>;

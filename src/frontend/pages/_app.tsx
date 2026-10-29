@@ -12,6 +12,9 @@ import { init, identify, addSignalAttribute, removeSignalAttribute } from '@dash
 import { recorder } from '@dash0/sdk-web/session-recording';
 import { createRandomUser } from '../utils/faker/createRandomUser';
 import { createRandomLocation } from '../utils/faker/createRandomLocation';
+import SessionGateway from '../gateways/Session.gateway';
+import { OpenFeatureProvider, OpenFeature } from '@openfeature/react-sdk';
+import { FlagdWebProvider } from '@openfeature/flagd-web-provider';
 
 declare global {
   interface Window {
@@ -24,13 +27,13 @@ declare global {
       NEXT_PUBLIC_ASSETS_BASE_URL?: string;
     };
     seed?: {
-        email: string;
-        location: {
-            countryCode: string;
-            continentCode: string;
-            locality: string;
-        }
-    }
+      email: string;
+      location: {
+        countryCode: string;
+        continentCode: string;
+        locality: string;
+      };
+    };
   }
 }
 
@@ -47,7 +50,7 @@ if (typeof window !== 'undefined') {
     serviceName: window.ENV.NEXT_PUBLIC_OTEL_SERVICE_NAME!,
     endpoint: {
       url: window.ENV.NEXT_PUBLIC_DASH0_WEB_SDK_URL,
-      // We provide an empty token, because since we're using a proxy, there's no need for an actual token here.
+      // The endpoint is a proxy to the collector, so no token is needed.
       authToken: '',
     },
     sessionRecording: {
@@ -56,16 +59,44 @@ if (typeof window !== 'undefined') {
   });
 
   if (Math.floor(Math.random() * 8) > 1) {
-    identify('user_' + Math.random().toString(16).substr(2, 8), randomUser);
+    identify('user_' + Math.random().toString(16).slice(2, 10), { name: randomUser.username, fullName: randomUser.fullName, email: randomUser.email });
 
-    // Removing the automatically set user_agent
+    // Replace the automatically set user agent with the fake one.
     removeSignalAttribute('user_agent.original');
-    // So that we can add our own faked one.
     addSignalAttribute('user_agent.original', randomUser.userAgent);
 
     for (const [key, value] of Object.entries(createRandomLocation(window.seed?.location))) {
       addSignalAttribute(key, value);
     }
+  }
+
+  if (window.location) {
+    const session = SessionGateway.getSession();
+
+    // Set context prior to provider init to avoid multiple http calls
+    OpenFeature.setContext({ targetingKey: session.userId, ...session }).then(() => {
+      /**
+       * We connect to flagd through the envoy proxy, straight from the browser,
+       * for this we need to know the current hostname and port.
+       */
+
+      const useTLS = window.location.protocol === 'https:';
+      let port = useTLS ? 443 : 80;
+      if (window.location.port) {
+          port = parseInt(window.location.port, 10);
+      }
+
+      OpenFeature.setProvider(
+        new FlagdWebProvider({
+          host: window.location.hostname,
+          pathPrefix: 'flagservice',
+          port: port,
+          tls: useTLS,
+          maxRetries: 3,
+          maxDelay: 10000,
+        })
+      );
+    });
   }
 }
 
@@ -74,13 +105,15 @@ const queryClient = new QueryClient();
 function MyApp({ Component, pageProps }: AppProps) {
   return (
     <ThemeProvider theme={Theme}>
-      <QueryClientProvider client={queryClient}>
-        <CurrencyProvider>
-          <CartProvider>
-            <Component {...pageProps} />
-          </CartProvider>
-        </CurrencyProvider>
-      </QueryClientProvider>
+      <OpenFeatureProvider>
+        <QueryClientProvider client={queryClient}>
+          <CurrencyProvider>
+            <CartProvider>
+              <Component {...pageProps} />
+            </CartProvider>
+          </CurrencyProvider>
+        </QueryClientProvider>
+      </OpenFeatureProvider>
     </ThemeProvider>
   );
 }
