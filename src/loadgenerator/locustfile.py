@@ -176,6 +176,16 @@ async def human_click(page, selector, **kwargs):
     position = await move_to(page, selector)
     await page.click(selector, position=position, **kwargs)
 
+async def rage_click(page, selector):
+    """Clicks the same spot in a quick burst, like a user whose click seems to do nothing. The Dash0 Web SDK
+    reports 3+ clicks less than a second apart within 30px as a rage click, but only during a session recording."""
+    if await move_to(page, selector) is None:
+        return
+    x, y = mouse_positions[page]
+    for _ in range(random.randint(3, 7)):
+        await page.mouse.click(x + random.uniform(-4, 4), y + random.uniform(-4, 4))
+        await page.wait_for_timeout(random.randint(80, 300))
+
 async def browse_idle(page, min_ms, max_ms):
     """Waits like a user reading the page, moving the cursor now and then."""
     deadline = time.monotonic() + random.randint(min_ms, max_ms) / 1000
@@ -279,6 +289,9 @@ if browser_traffic_enabled:
                         await browse_idle(page, 2000, 15000)
                         await human_click(page, 'p:has-text("Roof Binoculars")')
                         await browse_idle(page, 2000, 15000)
+                        if (random.randint(0, 5) == 0): # rage click the product picture, which is not clickable, with a chance of 1:6
+                            await rage_click(page, '[data-cy="product-picture"]')
+                            await browse_idle(page, 2000, 5000)
                         await human_click(page, 'button:has-text("Add To Cart")')
                         await browse_idle(page, 2000, 15000)
 
@@ -293,7 +306,10 @@ if browser_traffic_enabled:
                         await human_click(page, 'a[data-cy="cart-icon"]')
                         await human_click(page, 'button:has-text("Go to Shopping Cart")')
                         await browse_idle(page, 2000, 15000)
-                        await human_click(page, 'button:has-text("Place Order")')
+                        if (random.randint(0, 2) == 0): # rage click "Place Order" while the order is processed, with a chance of 1:3
+                            await rage_click(page, 'button:has-text("Place Order")')
+                        else:
+                            await human_click(page, 'button:has-text("Place Order")')
                         await browse_idle(page, 2000, 5000)
             except:
                 raise
