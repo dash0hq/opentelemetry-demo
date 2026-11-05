@@ -11,8 +11,11 @@ import (
 	"fmt"
 	"io/fs"
 	"net"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
+	"runtime/pprof"
 	"strings"
 	"sync"
 	"syscall"
@@ -179,6 +182,14 @@ func main() {
 
 	log.Infof("ProductCatalogService gRPC server started on port: %s", port)
 
+	profilingServer := &http.Server{Addr: ":6060", ReadHeaderTimeout: 5 * time.Second}
+	defer profilingServer.Close()
+	go func() {
+		if err := profilingServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Errorf("pprof HTTP server failed: %v", err)
+		}
+	}()
+
 	ln, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
 	if err != nil {
 		log.Fatalf("TCP Listen: %v", err)
@@ -186,6 +197,8 @@ func main() {
 
 	srv := grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
+		grpc.ChainUnaryInterceptor(profilingUnaryInterceptor),
+		grpc.ChainStreamInterceptor(profilingStreamInterceptor),
 	)
 
 	reflection.Register(srv)
@@ -206,6 +219,38 @@ func main() {
 
 	srv.GracefulStop()
 	log.WithContext(ctx).Println("ProductCatalogService gRPC server stopped")
+}
+
+func profilingUnaryInterceptor(ctx context.Context, req any, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
+	spanContext := trace.SpanContextFromContext(ctx)
+	if !spanContext.IsValid() {
+		return handler(ctx, req)
+	}
+	pprof.Do(ctx, pprof.Labels("otel.trace_id", spanContext.TraceID().String()), func(ctx context.Context) {
+		resp, err = handler(ctx, req)
+	})
+	return resp, err
+}
+
+func profilingStreamInterceptor(srv any, stream grpc.ServerStream, _ *grpc.StreamServerInfo, handler grpc.StreamHandler) (err error) {
+	ctx := stream.Context()
+	spanContext := trace.SpanContextFromContext(ctx)
+	if !spanContext.IsValid() {
+		return handler(srv, stream)
+	}
+	pprof.Do(ctx, pprof.Labels("otel.trace_id", spanContext.TraceID().String()), func(ctx context.Context) {
+		err = handler(srv, &profilingServerStream{ServerStream: stream, ctx: ctx})
+	})
+	return err
+}
+
+type profilingServerStream struct {
+	grpc.ServerStream
+	ctx context.Context
+}
+
+func (s *profilingServerStream) Context() context.Context {
+	return s.ctx
 }
 
 type productCatalog struct {
