@@ -9,7 +9,9 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	_ "net/http/pprof"
 	"os"
+	"runtime/pprof"
 	"strconv"
 	"sync"
 	"time"
@@ -200,6 +202,14 @@ func main() {
 
 	log.Infof("service config: %+v", svc)
 
+	profilingServer := &http.Server{Addr: ":6060", ReadHeaderTimeout: 5 * time.Second}
+	defer profilingServer.Close()
+	go func() {
+		if err := profilingServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Errorf("pprof HTTP server failed: %v", err)
+		}
+	}()
+
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
 	if err != nil {
 		log.Fatal(err)
@@ -207,12 +217,46 @@ func main() {
 
 	var srv = grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
+		grpc.ChainUnaryInterceptor(profilingUnaryInterceptor),
+		grpc.ChainStreamInterceptor(profilingStreamInterceptor),
 	)
 	pb.RegisterCheckoutServiceServer(srv, svc)
 	healthpb.RegisterHealthServer(srv, svc)
 	log.Infof("starting to listen on tcp: %q", lis.Addr().String())
 	err = srv.Serve(lis)
 	log.Fatal(err)
+}
+
+func profilingUnaryInterceptor(ctx context.Context, req any, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
+	spanContext := trace.SpanContextFromContext(ctx)
+	if !spanContext.IsValid() {
+		return handler(ctx, req)
+	}
+	pprof.Do(ctx, pprof.Labels("otel.trace_id", spanContext.TraceID().String()), func(ctx context.Context) {
+		resp, err = handler(ctx, req)
+	})
+	return resp, err
+}
+
+func profilingStreamInterceptor(srv any, stream grpc.ServerStream, _ *grpc.StreamServerInfo, handler grpc.StreamHandler) (err error) {
+	ctx := stream.Context()
+	spanContext := trace.SpanContextFromContext(ctx)
+	if !spanContext.IsValid() {
+		return handler(srv, stream)
+	}
+	pprof.Do(ctx, pprof.Labels("otel.trace_id", spanContext.TraceID().String()), func(ctx context.Context) {
+		err = handler(srv, &profilingServerStream{ServerStream: stream, ctx: ctx})
+	})
+	return err
+}
+
+type profilingServerStream struct {
+	grpc.ServerStream
+	ctx context.Context
+}
+
+func (s *profilingServerStream) Context() context.Context {
+	return s.ctx
 }
 
 func mustMapEnv(target *string, envKey string) {
